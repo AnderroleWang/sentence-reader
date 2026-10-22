@@ -1,0 +1,258 @@
+{
+  "app": "sentence-reader",
+  "version": "0.4.0",
+  "package": "source",
+  "privacy": "Application, documentation and self-authored demo only; no user browser data or API settings.",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 218,
+      "sha256": "cbfb1e4654876c8a924a01c8b1df2ce13e958c07330d4a1bb5ed02404105e421"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 556,
+      "sha256": "9a7b522c2a549ea6583c9f38be456bf7b9a4d3d510bb4b133208e8285421344d"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 1458,
+      "sha256": "a4c90f96e7209747420010ebce755a65273888e92cf301ba0ccc01a114b7aa0a"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "bytes": 2055,
+      "sha256": "1c73ef7894005b4c09eb3cc17bae87e49a416dfa962b690b27b80e61f665e02b"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1087,
+      "sha256": "2fac18055b166d0d21e3cb677a142731e925e04d253da5711a3ddd3a5bd5e18c"
+    },
+    {
+      "path": "README.md",
+      "bytes": 10708,
+      "sha256": "c4ecb8bf16e4b9223670e744bfd16f79bc60d809796cd4b599086ed543decaec"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "bytes": 1657,
+      "sha256": "94731a6fbb23ee6d72b44fba9892fc88703b6cab8d0fd47bed16a27a6aa22528"
+    },
+    {
+      "path": "UPSTREAM.md",
+      "bytes": 5464,
+      "sha256": "3f9919c240268d640df02977dac73584b8de9a26f3c0bfdea378dc032807d796"
+    },
+    {
+      "path": "alignment.mjs",
+      "bytes": 10942,
+      "sha256": "9a1c97586e1251eeaf09682740dc8b28df4de9c7445e568643aa67061882f1fd"
+    },
+    {
+      "path": "app.mjs",
+      "bytes": 46230,
+      "sha256": "d7fb071b7bd00273ba6716f3a0e0d54c29e87d73d3df2c97e9ec9fdefb529c56"
+    },
+    {
+      "path": "docs/PRIVACY.md",
+      "bytes": 3179,
+      "sha256": "ea100e5066428a426d7a853fcb51c2d8a772342fa8085dd2d4928bac47d50ce5"
+    },
+    {
+      "path": "docs/USER_GUIDE.md",
+      "bytes": 17143,
+      "sha256": "cf30bacd12a31df4bd03e76883d36e84537b1ac29a29a75a2454c814d14847d0"
+    },
+    {
+      "path": "examples/layout-demo.句读.json",
+      "bytes": 31384,
+      "sha256": "790c0cfbf6fabac5f136ac99ba8ba3cb875eefb91b7b975d2c88b035b247cab2"
+    },
+    {
+      "path": "examples/layout-preview.png",
+      "bytes": 105255,
+      "sha256": "8157474772fe1edc320d00e2d5a1cf0f0adb4e2ed749983e42cc0be908f12548"
+    },
+    {
+      "path": "examples/reading-tools-preview.png",
+      "bytes": 119062,
+      "sha256": "571fd89dfcf000eeec0f910160f7f89648e979724462a3158f9cfec1a284287e"
+    },
+    {
+      "path": "focus.mjs",
+      "bytes": 1529,
+      "sha256": "1237a51602e85c5295c1d118b3d57974325f6390e6acd833c7a0679a9bc5c395"
+    },
+    {
+      "path": "index.html",
+      "bytes": 14577,
+      "sha256": "46a11686e59ae0eafd6f42ceeef5e41bce329ec399a9681a6688e194d1768618"
+    },
+    {
+      "path": "paired-import.mjs",
+      "bytes": 7928,
+      "sha256": "bb7c9993bb8411a770c7115c2922085a354014b4cec98223c4bbdeaf4e505805"
+    },
+    {
+      "path": "pdf-document.mjs",
+      "bytes": 9337,
+      "sha256": "8f57a78a77785c5ce255b328b59245cb5276abf938b3fcd8fd1c0560e8f7ead8"
+    },
+    {
+      "path": "pdf-reader.mjs",
+      "bytes": 16529,
+      "sha256": "2f473640840f072d34f56fd7484c961b8cb77c8467a1d6e69ed5e7ce1f15fa18"
+    },
+    {
+      "path": "reading-data.mjs",
+      "bytes": 7815,
+      "sha256": "4985d265f452444f1fdb9dacbd20b0a5e762c1422d95746ef9bf030b8af64e72"
+    },
+    {
+      "path": "reading-tools.mjs",
+      "bytes": 36062,
+      "sha256": "58051f2cc23785ea977bf87154623555e90b7dd539e0c1c0dd70e71a68ec66ba"
+    },
+    {
+      "path": "scripts/build_release.py",
+      "bytes": 7354,
+      "sha256": "21a6bac71cc6dd82f6336b0978b2c65465335e4e59cf49e0363d6694791335ca"
+    },
+    {
+      "path": "server.py",
+      "bytes": 20092,
+      "sha256": "fc66a19bd6ae8814aaa40dfa9675df6c507d5f7ec4ee837a216fb03ca5217771"
+    },
+    {
+      "path": "start.cmd",
+      "bytes": 418,
+      "sha256": "dd89e22f9bbf9722c2744f69715488e0f3d737c767a501682bd60a2821ae00ab"
+    },
+    {
+      "path": "start.sh",
+      "bytes": 241,
+      "sha256": "b68763442fadd3b7ac6ddd0653732f9adb056cec845052bd68471976aeab7c89"
+    },
+    {
+      "path": "styles.css",
+      "bytes": 21651,
+      "sha256": "0e391b773feed9989ce53fcc062c455b5de03042f4b7b99c450ef97f8ff7e80c"
+    },
+    {
+      "path": "tests/test_server.py",
+      "bytes": 9013,
+      "sha256": "f2cc870cca1bd66b904b96d866c98679b195b2341b0081043d1c6f3373a7e302"
+    },
+    {
+      "path": "translated-pdf.mjs",
+      "bytes": 15352,
+      "sha256": "2797357cde34a0dbd817a83fb207c8237b1c483bb833d5d8f1ddcb25113c5887"
+    },
+    {
+      "path": "vendor/PDFJS-LICENSE",
+      "bytes": 10174,
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+    },
+    {
+      "path": "vendor/pdf.mjs",
+      "bytes": 658371,
+      "sha256": "a209a2124baa35cbb9015b809926f1bcec9dd1c247296290e205dd9d76cb9128"
+    },
+    {
+      "path": "vendor/pdf.worker.mjs",
+      "bytes": 2209730,
+      "sha256": "7c237f83fa56bce645d8af51d183c9c56ba7b2d2928ff42754dc7020bea36323"
+    },
+    {
+      "path": "vendor/pdf_viewer.css",
+      "bytes": 100297,
+      "sha256": "f684e5c55f3baa4516519e8e0d4543726ab2c4223a0ded8c71ed9d5bf3782e7b"
+    },
+    {
+      "path": "vendor/standard_fonts/FoxitDingbats.pfb",
+      "bytes": 29513,
+      "sha256": "845c752392b6c914fb989c75a08b7792b88f542d2499042ef2889f8c814a16ed"
+    },
+    {
+      "path": "vendor/standard_fonts/FoxitFixed.pfb",
+      "bytes": 17597,
+      "sha256": "b6c8fe53f134b8b6d4578cd2d544df4cee9624c4efa8d51a560fb40ea296101b"
+    },
+    {
+      "path": "vendor/standard_fonts/FoxitFixedBold.pfb",
+      "bytes": 18055,
+      "sha256": "f1b7159702973f54fc86254ea38bcf3712b2a736eb3a0995751e9f4bb45ad603"
+    },
+    {
+      "path": "vendor/standard_fonts/FoxitFixedBoldItalic.pfb",
+      "bytes": 19151,
+      "sha256": "8a000945843bd31add06aee63bf9fd41b7578b4f3242a4b7cd46349ad9d24d4d"
+    },
+    {
+      "path": "vendor/standard_fonts/FoxitFixedItalic.pfb",
+      "bytes": 18746,
+      "sha256": "5007faf8320fa1fcc08b8894b356ad976f60b992ba29ee5272578bbdebaf3876"
+    },
+    {
+      "path": "vendor/standard_fonts/FoxitSerif.pfb",
+      "bytes": 19469,
+      "sha256": "4f57d2b9d884af8f907bf22df6019b52d86cbf6214fdbd02b1ae05472a543f35"
+    },
+    {
+      "path": "vendor/standard_fonts/FoxitSerifBold.pfb",
+      "bytes": 19395,
+      "sha256": "0bdf4b04e964139818d51eda03d566ba999fc3ba2421b1c6c51f9dc969022e80"
+    },
+    {
+      "path": "vendor/standard_fonts/FoxitSerifBoldItalic.pfb",
+      "bytes": 20733,
+      "sha256": "a406cac82583bf98175cb62c87ed5e95c45fbb34eece63a10b0a13e793cb2e10"
+    },
+    {
+      "path": "vendor/standard_fonts/FoxitSerifItalic.pfb",
+      "bytes": 21227,
+      "sha256": "610ae0687198045c4db5d1a6650fd5e92536631706382eb8b72e38df578d0ae9"
+    },
+    {
+      "path": "vendor/standard_fonts/FoxitSymbol.pfb",
+      "bytes": 16729,
+      "sha256": "47967d055530e7357088a08403115425643ec2cdfd6201ba8af0fbd7116c1539"
+    },
+    {
+      "path": "vendor/standard_fonts/LICENSE_FOXIT",
+      "bytes": 1553,
+      "sha256": "b578cdd2345840ada550bd12519533812320d5f1d21cf4c1c7e1b1b0a31c98b7"
+    },
+    {
+      "path": "vendor/standard_fonts/LICENSE_LIBERATION",
+      "bytes": 4414,
+      "sha256": "93fed46019c38bbe566b479d22148e2e8a1e85ada614accb0211c37b2c61c19b"
+    },
+    {
+      "path": "vendor/standard_fonts/LiberationSans-Bold.ttf",
+      "bytes": 137052,
+      "sha256": "361c61b82d575c5c35fd9157fda8b0194bcfcd0d88ea8521a4fb5dd53d33dddc"
+    },
+    {
+      "path": "vendor/standard_fonts/LiberationSans-BoldItalic.ttf",
+      "bytes": 135124,
+      "sha256": "a224075ac17495ad0a3af3bc0a419ac0704a8b3fd1095456201fb9b095fc281d"
+    },
+    {
+      "path": "vendor/standard_fonts/LiberationSans-Italic.ttf",
+      "bytes": 162036,
+      "sha256": "832b4406dbef23628800d3aaad21048534ac84d7e3ad955be83b8172ed8ef512"
+    },
+    {
+      "path": "vendor/standard_fonts/LiberationSans-Regular.ttf",
+      "bytes": 139512,
+      "sha256": "f8ace1f892b2bd9dc1792ba7f097fa7588f84fed48321480e04de5390828221f"
+    },
+    {
+      "path": "开始使用.md",
+      "bytes": 2168,
+      "sha256": "1e77edf4e0c0f07361c698b9cb5667c033e87586c3e0f6ea29fac8d8c8fcc7cc"
+    }
+  ]
+}

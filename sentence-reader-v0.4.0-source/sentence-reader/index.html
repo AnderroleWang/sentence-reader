@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="paper">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>句读 · 双语论文阅读器</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%233a5c45'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-size='44' fill='%23fff7de'%3E句%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/pdf_viewer.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="论文库">
+      <div class="brand"><span class="brand-mark">句</span><div><strong>句读</strong><span>让原文与理解相连</span></div><span class="version">0.4</span></div>
+      <div class="import-buttons">
+        <button class="primary" id="import-pdf">＋ 导入 PDF</button>
+        <button id="import-text">粘贴网页正文</button>
+        <button id="import-paired">导入已排版对读包</button>
+      </div>
+      <div class="library-heading"><span>我的阅读</span><button class="text-button" id="import-project">导入档案</button></div>
+      <nav id="library" aria-label="已保存的论文"></nav>
+      <div class="sidebar-bottom"><span class="local-dot"></span>文档保存在此浏览器中<button class="text-button" id="show-help">使用说明</button></div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="document-title"><h1 id="paper-title">句读</h1><div id="paper-meta"></div></div>
+        <div class="top-actions"><button id="compact-pdf" class="compact-import">导入 PDF</button><button id="compact-text" class="compact-import">粘贴正文</button><button id="compact-paired" class="compact-import">导入对读包</button><button id="export-project">导出档案</button><button id="open-settings">翻译设置</button></div>
+      </header>
+      <select id="mobile-library" aria-label="切换论文"></select>
+      <div class="error-banner" id="error-banner" role="alert" hidden><span id="error-message"></span><button class="text-button" id="dismiss-error">关闭</button></div>
+      <div class="reading-toolbar">
+        <div class="view-switch" aria-label="原文显示方式"><button id="view-text" class="selected" aria-pressed="true">正文</button><button id="view-pdf" aria-pressed="false" hidden>PDF 原版</button></div>
+        <div class="reading-tools"><button id="font-minus" aria-label="减小正文字号">A−</button><button id="font-plus" aria-label="增大正文字号">A＋</button><label><input type="checkbox" id="focus-mode">专注阅读</label></div>
+        <div class="sentence-nav"><button id="previous-sentence" aria-label="上一句，快捷键 K">↑ K</button><span id="position-label"></span><button id="next-sentence" aria-label="下一句，快捷键 J">J ↓</button></div>
+        <button class="primary" id="translate">翻译未完成部分</button><button id="stop-translate" hidden>完成本批后停止</button>
+      </div>
+      <div class="reading-workspace" id="reading-workspace"><div class="reading-panes" id="reading-panes">
+        <section class="pane source-pane" aria-label="英文原文">
+          <header class="pane-header"><span>ENGLISH <em>原文</em></span><div class="pdf-navigation" id="pdf-navigation" hidden><button id="previous-page" aria-label="上一页">‹</button><label><input type="number" id="page-number" min="1" value="1" aria-label="PDF 页码"><span id="page-total"></span></label><button id="next-page" aria-label="下一页">›</button><select id="pdf-zoom" aria-label="PDF 放大比例"><option value="1">适宽</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option></select></div><span class="pane-hint">点选或拖选句子</span></header>
+          <div id="source-layout-note" class="layout-note" hidden>英文原版 · 连续滚动 · ↑ ↓ 逐句阅读</div>
+          <div id="source-scroll" class="pane-scroll"><div id="source-text" lang="en"></div><div id="pdf-container" hidden></div></div>
+        </section>
+        <section class="pane translation-pane" aria-label="中文译文">
+          <header class="pane-header"><span>中文译文</span><div id="target-view-switch" class="view-switch" aria-label="译文显示方式" hidden><button id="target-view-text" aria-pressed="false">逐句</button><button id="target-view-reader" aria-pressed="false">舒展阅读</button><button id="target-view-layout" aria-pressed="true" class="selected">论文版式</button></div><span id="translation-summary" class="pane-hint"></span></header>
+          <div id="layout-note" class="layout-note" hidden><span id="layout-status">译文按原位排布 · 图表与公式保留</span><button id="layout-read" class="text-button">完整阅读 →</button></div>
+          <div id="target-scroll" class="pane-scroll"><div id="target-text" lang="zh-CN"></div><div id="translated-pdf-container" hidden></div></div>
+        </section>
+      </div><aside id="reader-desk" class="reader-desk" aria-label="阅读助手" hidden>
+        <header class="desk-heading"><strong id="desk-title">完整阅读</strong><div><button id="desk-expand" title="展开阅读区" aria-label="展开阅读区">⤢</button><button id="desk-close" aria-label="关闭阅读区">×</button></div></header>
+        <nav id="desk-tabs" aria-label="阅读助手功能"></nav>
+        <label class="desk-width">阅读区宽度<input id="desk-width" type="range" min="320" max="720" value="420" aria-label="阅读区宽度"></label>
+        <div id="desk-body" class="desk-body"></div>
+      </aside></div>
+      <footer class="selection-bar">
+        <div class="selection-description"><strong id="selection-label"></strong><span id="selection-note"></span></div>
+        <div class="selection-actions"><button id="open-reading">完整阅读</button><button id="open-alignment">对齐检查</button><button id="open-explain">解释难句</button><button id="open-terms">术语</button><button id="open-references">图表 / 公式</button><button id="open-notes">写批注</button><button id="undo-edit" disabled>撤销</button><button id="redo-edit" disabled>重做</button><button id="edit-translation">编辑译文</button><button id="correct-source">修正原文</button><button id="merge-next">合并下一组</button><button id="split-group" hidden>按原文拆分</button><button id="review-group">标记已核对</button><button class="text-button" id="retranslate-group">重译本组</button></div>
+      </footer>
+      <div class="statusbar"><span id="activity" role="status" aria-live="polite">准备就绪</span><span id="save-state">保存在此浏览器</span></div>
+    </main>
+  </div>
+
+  <input type="file" id="pdf-file" accept="application/pdf,.pdf" hidden>
+  <input type="file" id="project-file" accept="application/json,.json" hidden>
+  <input type="file" id="paired-files" accept="application/pdf,application/json,.pdf,.json" multiple hidden>
+
+  <dialog id="paired-dialog" aria-labelledby="paired-title"><div class="dialog-heading"><h2 id="paired-title">导入已排版对读包</h2><button class="close-dialog" aria-label="关闭">×</button></div>
+    <p>原文与中文 PDF 会按文件中的原始版式显示，点击任一侧的对应区域即可联动高亮。</p>
+    <p class="muted">同时选择一个包中的文件：</p>
+    <ul class="help-steps"><li>SideBySide 格式：英文 PDF、中文 PDF、alignment.json。</li><li>Zotero Bilingual 格式：双语 PDF、对应的 .map.json。中文在左或右均可。</li></ul>
+    <p class="muted">可使用 PDF2zh／BabelDOC 等工具生成中文 PDF，再配合句子坐标映射。只有两份 PDF 时暂不能自动建立对应关系。导入过程在本机完成，不调用翻译服务。</p>
+    <p class="muted">排好版的 PDF 可阅读、重新配对、核对和导出。统一术语时更新舒展阅读中的文字；原 PDF 保留原样。</p>
+    <div class="dialog-actions"><button id="open-layout-demo">打开版式演示</button><button class="close-dialog">取消</button><button id="choose-paired" class="primary">选择 PDF 和映射文件</button></div>
+  </dialog>
+
+  <dialog id="text-dialog">
+    <form id="text-form"><div class="dialog-heading"><h2>粘贴网页正文</h2><button type="button" class="close-dialog" aria-label="关闭">×</button></div>
+      <p class="muted">从论文网页复制英文正文。段落之间保留空行，公式可原样粘贴。</p>
+      <label class="field">论文标题<input id="text-title" placeholder="例如：论文名称"></label>
+      <label class="field">英文正文<textarea id="text-input" rows="11" required placeholder="Paste the English text here…" spellcheck="false"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="close-dialog">取消</button><button type="submit" class="primary">开始阅读</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog">
+    <form id="settings-form"><div class="dialog-heading"><h2>翻译设置</h2><button type="button" class="close-dialog" aria-label="关闭">×</button></div>
+      <p class="muted">点击翻译或难句解释时，将相应句子及相邻上下文发送到你填写的服务。选用本地模型时，文本留在本机。</p>
+      <label class="field">接口协议<select id="setting-protocol"><option value="compatible">兼容 Chat Completions 的接口</option><option value="ollama">Ollama 原生接口</option></select></label>
+      <label class="field">服务地址<input id="setting-url" type="url" placeholder="https://你的服务地址/v1" required spellcheck="false"><small>可填写基础地址或完整的 /chat/completions 地址。</small></label>
+      <label class="field">模型名称<input id="setting-model" placeholder="填写服务中的准确模型名称" required spellcheck="false"></label>
+      <label class="field">API 密钥<input id="setting-key" type="password" autocomplete="off" placeholder="本地服务通常可以留空"><small>密钥只在当前页面内存中保留，刷新后需要重新填写，不写入档案。</small></label>
+      <label class="field">研究领域 / 术语约定（可选）<textarea id="setting-domain" rows="2" placeholder="例如：机械视觉；assembly 译为装配，pose 译为位姿。"></textarea></label>
+      <div class="settings-row"><label class="field">每批原文单元<select id="setting-batch"><option value="4">4（适合较小的本地模型）</option><option value="8">8</option><option value="12">12</option><option value="20">20</option></select></label><label class="field">阅读外观<select id="setting-theme"><option value="paper">纸张</option><option value="light">明亮</option><option value="dark">夜间</option></select></label></div>
+      <div id="connection-result" class="connection-result" role="status"></div>
+      <div class="dialog-actions"><button type="button" id="test-connection">测试连接（少量用量）</button><button type="submit" class="primary">保存设置</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="edit-dialog"><form id="edit-form"><div class="dialog-heading"><h2 id="edit-title">编辑译文</h2><button type="button" class="close-dialog" aria-label="关闭">×</button></div><div id="edit-source" class="source-excerpt"></div><div id="edit-fields"></div><label class="review-check" id="edit-reviewed-row"><input type="checkbox" id="edit-reviewed">我已核对原文和译文</label><div class="dialog-actions"><button type="button" class="close-dialog">取消</button><button type="submit" class="primary">保存</button></div></form></dialog>
+
+  <dialog id="help-dialog"><div class="dialog-heading"><h2>从一篇论文开始</h2><button class="close-dialog" aria-label="关闭">×</button></div>
+    <ol class="help-steps"><li>导入可选中文字的 PDF，或粘贴论文网页正文。</li><li>先检查英文识别顺序；PDF 可切换原版和正文。选中有误的单元，用“修正原文”修改。</li><li>在翻译设置填写你的服务地址和模型，再翻译未完成部分。支持分批暂停与续译。</li><li>PDF 右侧可选“论文版式”，中文按原来的栏位、标题和段落位置排布，图表、公式和较短的图内标签保留原样。未翻译区域显示英文；原栏位放不下时，点击句子可在可调宽的阅读区看完整译文；选择“舒展阅读”可自然换行连续读全文。跨栏或跨页的句组不按标点硬拆，可展开阅读整组译文。</li><li>点选或拖选英文，中文对应句组同步高亮；点击中文可反向定位。PDF 两侧均可连续滚动，点击对应句子时定位另一侧；页码可直接跳转。按 ↓ / → / J 下一句、↑ / ← / K 上一句，或 Alt+↓ / Alt+↑，在输入框和弹窗中不会触发切句。两侧可一起放大。“专注阅读”会淡化两侧其余内容；“完整阅读”支持调宽和展开。</li><li>使用“对齐检查”查看漏译、数值及已有警告；可重新配对、合并、拆分，并用撤销 / 重做或 Ctrl+Z / Ctrl+Shift+Z 恢复。已排版 PDF 可以重配已有片段。核对后可做确认标记。</li><li>“解释难句”会调用你配置的模型，结合相邻上下文解释结构、术语与作者意图，每条附原文依据。AI 解释仍需核对。</li><li>“术语”支持悬停释义、自定义本文含义、统一现有译法和个人词库导入 / 导出。“图表 / 公式”可按编号展开原页，关闭后回到当前句。“写批注”自动关联中英文，可导出带原句、译文、页码的笔记。</li><li>阅读位置和文档自动保存在此浏览器。定期导出档案，换浏览器或清理数据前尤其如此。</li></ol>
+    <p class="muted">第一版不支持扫描件 OCR、网页网址直接抓取或短语级精准对齐。复杂表格与公式附近的识别结果需要检查。“已生成”表示编号检查通过，不代表语义已经核对。</p>
+      <div class="dialog-actions"><button type="button" class="close-dialog primary">开始</button></div>
+  </dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>

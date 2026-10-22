@@ -8,13 +8,13 @@
 
 ![专注阅读、保留版式与完整译文侧栏](examples/reading-tools-preview.png)
 
-> 当前版本：**v0.4.3，实验版**。支持可选中文字的 PDF 和粘贴的网页正文。阅读、定位、笔记在本机完成；翻译和难句解释使用你自行配置的服务。
+> 当前版本：**v0.4.4，实验版**。支持可选中文字的 PDF 和粘贴的网页正文。阅读、定位、笔记在本机完成；翻译和难句解释使用你自行配置的服务。
 
 ## 先体验，再配置
 
 ### Windows：便携包
 
-1. 在 [Releases](https://github.com/AnderroleWang/sentence-reader/releases) 下载 `sentence-reader-v0.4.3-windows-x64.zip`，**解压整个文件夹**。
+1. 在 [Releases](https://github.com/AnderroleWang/sentence-reader/releases) 下载 `sentence-reader-v0.4.4-windows-x64.zip`，**解压整个文件夹**。
 2. 双击文件夹里的 **`start.cmd`**，保持启动窗口运行。
 3. 浏览器自动打开 <http://127.0.0.1:8765/>。首次可直接读自带的双语演示，**不需要密钥**。
 4. 要读自己的论文，导入 PDF，打开右上角“翻译设置”，填写自己的服务地址、模型和密钥。
@@ -50,6 +50,8 @@ macOS / Linux 通常使用 `python3 -X utf8 server.py`，也可运行 `sh start.
 | 为综述或复现做准备 | 任一语言侧写批注；导出笔记同时带上原句、译文、页码和自己的想法。 |
 
 方向键在输入框、编辑窗口和输入法组合输入时保留正常行为。`Esc` 收起阅读区 / 弹窗；`Ctrl+Z` 撤销，`Ctrl+Shift+Z` 重做。编辑框内仍使用正常的文字撤销。
+
+**PDF 清晰度**：原版、已有中文 PDF 和版式预览使用更高分辨率绘制，普通屏幕默认采用两倍像素，高密度屏幕随显示比例提高；大页和高倍放大受画布内存上限保护。浏览器缩放或换屏后自动重新绘制并保留阅读位置。黄色高亮保留黑色字迹，专注模式的其余正文保留更多对比度；双栏原文太小时可用 PDF 的 125% / 150% / 200% 放大阅读。
 
 **可以边翻译边阅读。** 翻译请求等待期间，上下键、双侧句子点选和 PDF 页码跳转照常使用；批次结果写入会保留当前句子和手动滚动位置。翻译期间暂停改写原文、合并拆分、重译和切换文档，避免覆盖正在处理的内容。
 
@@ -129,6 +131,8 @@ python -m unittest discover -s tests -v
 可选浏览器回归测试 `tests/navigation.browser.mjs` 使用 Playwright，拦截并延迟模拟翻译请求，验证翻译等待时的键盘、双向点选、输入框保护、批次写入后的阅读位置、跨页 PDF，以及会话编号跨请求一致、跨论文不同且不持久保存或导出；无需真实 API。安装 Playwright 并准备浏览器后，在本机阅读器运行时执行 `node tests/navigation.browser.mjs`。可通过 `READER_TEST_URL` 指定测试端口、`READER_BROWSER` 指定已有浏览器路径。测试使用独立的临时浏览器环境。
 
 `tests/models.browser.mjs` 同样使用 Playwright，验证空模型时读取、搜索与选择、手动输入、切换服务与密钥、过期响应丢弃、空列表与错误、模型名按文本显示、Ollama、密钥不落盘及窄屏布局。运行方式为 `node tests/models.browser.mjs`，支持相同的环境变量。
+
+`tests/rendering.browser.mjs` 验证普通 / 非整数显示比例下的 PDF 分辨率、高亮后的实际文字像素、裁切页放大与定位、画布上限、中文预览以及显示密度变化后的重绘与阅读位置。使用自拟示例，无需模型请求。
 
 发行包使用显式文件清单生成，可选加入官方 Python Windows 嵌入包：
 

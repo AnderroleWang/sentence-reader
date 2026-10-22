@@ -15,6 +15,6 @@ export function paintFocus(wrapper, rectangles, enabled) {
   mask.id = id; mask.setAttribute('maskUnits', 'userSpaceOnUse'); mask.setAttribute('x', '0'); mask.setAttribute('y', '0'); mask.setAttribute('width', '1000'); mask.setAttribute('height', '1000');
   mask.append(makeRect(0, 0, 1000, 1000, 'white'));
   for (const r of rectangles) mask.append(makeRect(r.x * 1000 - 1, r.y * 1000 - 1, r.w * 1000 + 2, r.h * 1000 + 2, 'black'));
-  defs.append(mask); const veil = makeRect(0, 0, 1000, 1000, 'white'); veil.setAttribute('mask', `url(#${id})`); veil.setAttribute('opacity', '.57');
+  defs.append(mask); const veil = makeRect(0, 0, 1000, 1000, 'white'); veil.setAttribute('mask', `url(#${id})`); veil.setAttribute('opacity', '.42');
   svg.append(defs, veil); wrapper.append(svg);
 }

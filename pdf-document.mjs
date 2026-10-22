@@ -22,10 +22,11 @@ export class PdfDocumentPane {
   }
   async render(pdf, number, units, zoom = 1, crops = null, groups = null) {
     const width = Math.max(280, this.container.clientWidth - 16) * zoom;
-    if (this.pdf !== pdf || this.width !== width || this.crops !== crops) {
+    const pixelRatio = window.devicePixelRatio || 1;
+    if (this.pdf !== pdf || this.width !== width || this.crops !== crops || this.pixelRatio !== pixelRatio) {
       const old = this.capturePosition();
       const samePdf = this.pdf === pdf;
-      this.clear(); this.pdf = pdf; this.width = width; this.crops = crops;
+      this.clear(); this.pdf = pdf; this.width = width; this.crops = crops; this.pixelRatio = pixelRatio;
       const generation = this.generation;
       this.units = units; this.groups = groups;
       for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {

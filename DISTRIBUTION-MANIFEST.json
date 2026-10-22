@@ -1,6 +1,6 @@
 {
   "app": "sentence-reader",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "package": "source",
   "privacy": "Application, documentation and self-authored demo only; no user browser data or API settings.",
   "files": [
@@ -16,8 +16,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 3425,
-      "sha256": "2b1dd5a03439a08523506867b7112084b86f72e2549e7d311323be8268e82422"
+      "bytes": 4060,
+      "sha256": "93d9f5627b400d9eee46e1364a32c9dbe19db42c9921abe2795bd4b50ebbc8a9"
     },
     {
       "path": "CONTRIBUTING.md",
@@ -31,8 +31,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 12964,
-      "sha256": "7ee9f970750dcec7799876d15289c6046f82cbab14af3d92c5acf6a7ad0ab9b3"
+      "bytes": 13683,
+      "sha256": "17e48d38cf37b8ed472ee930fdf6c8b89df66c7bfe001168524e15ae80fa3209"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -51,8 +51,8 @@
     },
     {
       "path": "app.mjs",
-      "bytes": 50616,
-      "sha256": "b5f8bd9a61a853a1f1449beae2e155f8c8bc24b5b9fe946d2716ad3eea5da13f"
+      "bytes": 50909,
+      "sha256": "7fbc4362275ee77d3de8f77285675c2ad899c3ec609ffb5194a59ea6134c7811"
     },
     {
       "path": "docs/PRIVACY.md",
@@ -61,8 +61,8 @@
     },
     {
       "path": "docs/USER_GUIDE.md",
-      "bytes": 21736,
-      "sha256": "9ae9e71b512b39e3232be93854f93b30074959ba08eb5c3cff8fe681c0179b46"
+      "bytes": 22732,
+      "sha256": "d6e93e4f0cf26605da624298e4eff8002d2ed9f8c1d7082fd20cc3c30a87a4aa"
     },
     {
       "path": "examples/layout-demo.句读.json",
@@ -82,12 +82,12 @@
     {
       "path": "focus.mjs",
       "bytes": 1529,
-      "sha256": "1237a51602e85c5295c1d118b3d57974325f6390e6acd833c7a0679a9bc5c395"
+      "sha256": "375b0662f3458f0b30c310f7f3ff980954feee9b7b758f2f0bfcbc1f40513eb7"
     },
     {
       "path": "index.html",
       "bytes": 15192,
-      "sha256": "dbc9b4ca089cf6dbdaf8cabf45449169760d0ea9fc49007e6a89cf23860a46f8"
+      "sha256": "462efc5db8f1ae5f0724a66ab873b4db098ed960c1382b01766d09c1fe51abf8"
     },
     {
       "path": "paired-import.mjs",
@@ -96,13 +96,18 @@
     },
     {
       "path": "pdf-document.mjs",
-      "bytes": 9337,
-      "sha256": "8f57a78a77785c5ce255b328b59245cb5276abf938b3fcd8fd1c0560e8f7ead8"
+      "bytes": 9454,
+      "sha256": "1fc674ceb9777767c60e0c586714ef66a8cb76200a7edbcaac0964f4a8848f0c"
     },
     {
       "path": "pdf-reader.mjs",
-      "bytes": 16529,
-      "sha256": "2f473640840f072d34f56fd7484c961b8cb77c8467a1d6e69ed5e7ce1f15fa18"
+      "bytes": 16341,
+      "sha256": "4daf43021c06c636804db1bdebdfe877f784995c7ff8c47628f288dcacfcf3ba"
+    },
+    {
+      "path": "pdf-rendering.mjs",
+      "bytes": 1030,
+      "sha256": "cfcbdc20bb8d3ef6edc25f5737fa577a5c377c6f3ddc6d815328b8660cc573cf"
     },
     {
       "path": "reading-data.mjs",
@@ -116,13 +121,13 @@
     },
     {
       "path": "scripts/build_release.py",
-      "bytes": 7354,
-      "sha256": "21a6bac71cc6dd82f6336b0978b2c65465335e4e59cf49e0363d6694791335ca"
+      "bytes": 7375,
+      "sha256": "f1d052fb745191c3d743f3b01c3b73fdf3d87160ff66659dbcb5b725ca3c5a96"
     },
     {
       "path": "server.py",
       "bytes": 25311,
-      "sha256": "ede76c9907d85c512c462b19b68991ed17c034e141f8f9f416a9e6dedc7754cb"
+      "sha256": "b700c21c8c676620d4a39c467e802c457338364e95d080e3fd2f7e8a858ef9f5"
     },
     {
       "path": "start.cmd",
@@ -136,8 +141,8 @@
     },
     {
       "path": "styles.css",
-      "bytes": 21883,
-      "sha256": "418f99cac2194b77e2e8347baa5e9d2cd68e4c3b8f8ca979bfc1dd1a1a2dd0fd"
+      "bytes": 21927,
+      "sha256": "96c72dc262fd5dc9c74ee0a3e817ebac14a828eba76aa1962246faeda73593f0"
     },
     {
       "path": "tests/models.browser.mjs",
@@ -150,14 +155,19 @@
       "sha256": "d89d2237f4f7037bbd6fd6eb4c45d4a55e89c94e821304e4df89357b3615eae7"
     },
     {
+      "path": "tests/rendering.browser.mjs",
+      "bytes": 7394,
+      "sha256": "0394f0273d7cb529072434f2bcf56c7d29cc9c6d05504b4b6e675456cdd3c951"
+    },
+    {
       "path": "tests/test_server.py",
       "bytes": 19223,
       "sha256": "853f85372da3fcd0015892043ca1388873c653b732a685e71f1967cae5fb8290"
     },
     {
       "path": "translated-pdf.mjs",
-      "bytes": 15352,
-      "sha256": "2797357cde34a0dbd817a83fb207c8237b1c483bb833d5d8f1ddcb25113c5887"
+      "bytes": 15165,
+      "sha256": "04ec829bdf4d5fbeab11deb11252b8bfd03ebfcb0821f3161959cfd240082cbe"
     },
     {
       "path": "vendor/PDFJS-LICENSE",

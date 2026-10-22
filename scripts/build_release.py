@@ -14,7 +14,7 @@ ROOT_FILES = (
     "README.md", "开始使用.md", "CHANGELOG.md", "THIRD_PARTY_NOTICES.md", "UPSTREAM.md", "LICENSE", "CONTRIBUTING.md",
     "server.py", "start.cmd", "start.sh", "index.html", "styles.css", ".gitignore", ".gitattributes",
     "alignment.mjs", "app.mjs", "focus.mjs", "paired-import.mjs", "pdf-document.mjs",
-    "pdf-reader.mjs", "reading-data.mjs", "reading-tools.mjs", "translated-pdf.mjs",
+    "pdf-reader.mjs", "pdf-rendering.mjs", "reading-data.mjs", "reading-tools.mjs", "translated-pdf.mjs",
 )
 SECRET_RULES = {
     "private-key": rb"-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----",

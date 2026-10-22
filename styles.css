@@ -92,14 +92,14 @@ h1 { font-size:17px; font-weight:550; margin:0 0 5px; overflow:hidden; text-over
 .pdf-navigation input { padding:1px 3px; width:48px; border:0; background:transparent; text-align:center; font-size:11px; }
 .pdf-navigation select { font-size:10px; padding:1px 3px; margin-left:5px; max-width:64px; }
 #pdf-container,#translated-pdf-container { padding:8px; }
-.pdf-page { position:relative; background:#fff; margin:auto; box-shadow:0 1px 5px #00000016; }
+.pdf-page { position:relative; background:#fff; margin:auto; box-shadow:0 1px 5px #00000016; isolation:isolate; }
 .pdf-page-slot { position:relative; margin:0 auto 30px; background:#fff; box-shadow:0 1px 5px #00000016; overflow-anchor:none; }
 .pdf-page-host { width:100%; height:100%; }
 .pdf-page-label { position:absolute; left:0; right:0; bottom:-23px; text-align:center; font:10px/20px system-ui,sans-serif; color:var(--muted); pointer-events:none; }
 .pdf-document { overflow-anchor:none; }
 .pdf-page canvas { display:block; }
 .pdf-page .textLayer { z-index:2; }
-.pdf-coordinate-highlights { position:absolute; inset:0; z-index:3; pointer-events:none; }
+.pdf-coordinate-highlights { position:absolute; inset:0; z-index:3; pointer-events:none; mix-blend-mode:multiply; }
 .pdf-coordinate-highlight { position:absolute; background:#ffd2498c; border-radius:1px; pointer-events:none; }
 .layout-note { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:2px 8px; min-height:32px; border-bottom:1px solid var(--line); padding:4px 12px; color:var(--muted); font-size:10px; }
 .layout-note button { font-size:10px; }
@@ -148,7 +148,7 @@ h2 { font-size:19px; font-weight:550; margin:0; }
 .reading-workspace { display:flex; flex:1; min-height:0; min-width:0; }
 .reading-workspace>.reading-panes { min-width:0; }
 .pdf-focus-veil { position:absolute; inset:0; width:100%; height:100%; z-index:5; pointer-events:none; }
-.focus-reading .source-sentence:not(.linked),.focus-reading .translation-group:not(.linked) { opacity:.44; }
+.focus-reading .source-sentence:not(.linked),.focus-reading .translation-group:not(.linked) { opacity:.58; }
 .focus-reading .layout-sentence:not(.linked) { opacity:1; }
 .layout-overflow::after { content:""; position:absolute; inset:auto 0 0; height:.8em; background:linear-gradient(transparent,#fff); pointer-events:none; }
 .layout-sentence.continuation { text-decoration:underline dotted; }

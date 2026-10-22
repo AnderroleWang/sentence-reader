@@ -673,6 +673,11 @@ $('edit-form').onsubmit = event => {
 };
 let resizeTimer;
 window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(async () => { if (project?.view === 'pdf') await renderPdf(); if (project) selectIds(project.activeIds, 'restore', false); }, 200); });
+function watchDisplayResolution() {
+  const display = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+  display.addEventListener('change', () => { watchDisplayResolution(); window.dispatchEvent(new Event('resize')); }, { once: true });
+}
+watchDisplayResolution();
 window.addEventListener('beforeunload', event => { if (busy) { event.preventDefault(); event.returnValue = ''; } else if (saveTimer) saveProject(); });
 window.addEventListener('unhandledrejection', event => { showError(event.reason); });
 

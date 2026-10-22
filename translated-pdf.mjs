@@ -1,6 +1,7 @@
 import * as pdfjs from './vendor/pdf.mjs';
 import { orderLines } from './pdf-reader.mjs';
 import { paintFocus } from './focus.mjs';
+import { preparePdfCanvas } from './pdf-rendering.mjs';
 
 const middle = values => values.filter(n => n > 0).sort((a, b) => a - b)[Math.floor(values.filter(n => n > 0).length / 2)] || 10;
 const intersects = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
@@ -125,14 +126,11 @@ export class TranslatedPdfPane {
     const viewport = page.getViewport({ scale: width / base.width });
     const wrapper = this.wrapper = document.createElement('div'); wrapper.className = 'pdf-page translated-page'; wrapper.lang = 'zh-CN';
     wrapper.style.width = viewport.width + 'px'; wrapper.style.height = viewport.height + 'px'; wrapper.style.setProperty('--scale-factor', String(viewport.scale));
-    const canvas = document.createElement('canvas');
-    const density = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.floor(viewport.width * density); canvas.height = Math.floor(viewport.height * density);
-    canvas.style.width = viewport.width + 'px'; canvas.style.height = viewport.height + 'px';
+    const canvas = document.createElement('canvas'), transform = preparePdfCanvas(canvas, viewport);
     const measurement = document.createElement('div'); measurement.className = 'textLayer layout-measurement'; measurement.setAttribute('aria-hidden', 'true');
     wrapper.append(canvas, measurement); this.container.append(wrapper);
     const context = canvas.getContext('2d');
-    this.renderTask = page.render({ canvasContext: context, viewport, transform: [density, 0, 0, density, 0, 0] });
+    this.renderTask = page.render({ canvasContext: context, viewport, transform });
     try { await this.renderTask.promise; } catch (error) { if (error.name === 'RenderingCancelledException') return; throw error; }
     if (token !== this.token) return;
     const content = await page.getTextContent();
@@ -170,7 +168,7 @@ export class TranslatedPdfPane {
       stats.replaced++;
       // Erase only extracted text strokes, leaving the page's images, vector
       // diagrams and equations on the rendered canvas intact.
-      context.save(); context.scale(density, density); context.fillStyle = '#fff';
+      context.save(); context.scale(transform[0], transform[3]); context.fillStyle = '#fff';
       for (const r of region.rects) context.fillRect(r.left - .35, r.top - .25, r.right - r.left + .7, r.bottom - r.top + .5);
       context.restore();
       const block = document.createElement('div'); block.className = 'layout-region' + (region.heading ? ' heading' : '');

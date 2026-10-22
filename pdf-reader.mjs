@@ -1,6 +1,7 @@
 import * as pdfjs from './vendor/pdf.mjs';
 import { unitsFromParagraphs } from './alignment.mjs';
 import { paintFocus } from './focus.mjs';
+import { preparePdfCanvas } from './pdf-rendering.mjs';
 pdfjs.GlobalWorkerOptions.workerSrc = new URL('./vendor/pdf.worker.mjs', import.meta.url).href;
 
 export async function loadPdf(blob) {
@@ -167,13 +168,11 @@ export class PdfPane {
     wrapper.style.setProperty('--scale-factor', String(scale));
     const surface = document.createElement('div'); surface.className = 'pdf-crop-surface';
     Object.assign(surface.style, { position: 'relative', width: viewport.width + 'px', height: viewport.height + 'px', left: -viewport.width * crop.x + 'px', top: -viewport.height * crop.y + 'px' });
-    const canvas = document.createElement('canvas'), density = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.floor(viewport.width * density); canvas.height = Math.floor(viewport.height * density);
-    canvas.style.width = viewport.width + 'px'; canvas.style.height = viewport.height + 'px';
+    const canvas = document.createElement('canvas'), transform = preparePdfCanvas(canvas, viewport);
     const layer = document.createElement('div'); layer.className = 'textLayer';
     const highlights = document.createElement('div'); highlights.className = 'pdf-coordinate-highlights'; highlights.setAttribute('aria-hidden', 'true');
     surface.append(canvas, layer); wrapper.append(surface, highlights); this.container.append(wrapper);
-    this.renderTask = page.render({ canvasContext: canvas.getContext('2d'), viewport, transform: [density, 0, 0, density, 0, 0] });
+    this.renderTask = page.render({ canvasContext: canvas.getContext('2d'), viewport, transform });
     try { await this.renderTask.promise; } catch (error) { if (error.name === 'RenderingCancelledException') return; throw error; }
     if (token !== this.token) return;
     const content = await page.getTextContent();

@@ -132,6 +132,10 @@ h2 { font-size:19px; font-weight:550; margin:0; }
 .dialog-actions { display:flex; justify-content:flex-end; gap:9px; flex-wrap:wrap; margin-top:22px; }
 .settings-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
 .connection-result { font-size:12px; white-space:pre-wrap; overflow-wrap:anywhere; }
+.model-controls { display:flex; gap:8px; align-items:flex-start; }
+.model-value { display:grid; gap:7px; flex:1; min-width:0; }
+.model-controls button { flex:none; white-space:nowrap; }
+#setting-model-filter { font-size:13px; }
 .source-excerpt { background:var(--paper); padding:13px; border-left:2px solid var(--line); color:var(--muted); font:15px/1.8 Georgia,serif; max-height:190px; overflow:auto; }
 .review-check { font-size:12px; display:flex; align-items:center; gap:6px; }
 .help-steps { font-size:13px; line-height:1.8; padding-left:20px; }

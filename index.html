@@ -12,7 +12,7 @@
 <body>
   <div class="app-shell">
     <aside class="sidebar" aria-label="论文库">
-      <div class="brand"><span class="brand-mark">句</span><div><strong>句读</strong><span>让原文与理解相连</span></div><span class="version">0.4</span></div>
+      <div class="brand"><span class="brand-mark">句</span><div><strong>句读</strong><span>让原文与理解相连</span></div><span class="version">0.4.3</span></div>
       <div class="import-buttons">
         <button class="primary" id="import-pdf">＋ 导入 PDF</button>
         <button id="import-text">粘贴网页正文</button>
@@ -87,8 +87,12 @@
       <p class="muted">点击翻译或难句解释时，将相应句子及相邻上下文发送到你填写的服务。选用本地模型时，文本留在本机。</p>
       <label class="field">接口协议<select id="setting-protocol"><option value="compatible">兼容 Chat Completions 的接口</option><option value="ollama">Ollama 原生接口</option></select></label>
       <label class="field">服务地址<input id="setting-url" type="url" placeholder="https://你的服务地址/v1" required spellcheck="false"><small>可填写基础地址或完整的 /chat/completions 地址。</small></label>
-      <label class="field">模型名称<input id="setting-model" placeholder="填写服务中的准确模型名称" required spellcheck="false"></label>
       <label class="field">API 密钥<input id="setting-key" type="password" autocomplete="off" placeholder="本地服务通常可以留空"><small>密钥只在当前页面内存中保留，刷新后需要重新填写，不写入档案。</small></label>
+      <div class="field"><label for="setting-model">模型名称</label>
+        <div class="model-controls"><div class="model-value"><select id="setting-model-list" aria-label="从列表选择模型" hidden></select><input id="setting-model" placeholder="读取列表后选择，或手动输入模型名称" required spellcheck="false" aria-describedby="model-list-status"></div><button type="button" id="load-models">读取模型列表</button></div>
+        <input id="setting-model-filter" type="search" placeholder="搜索模型名称…" aria-label="搜索模型" autocomplete="off" spellcheck="false" hidden>
+        <small id="model-list-status" role="status">填写服务地址与密钥后读取；本地服务通常无需密钥。</small>
+      </div>
       <label class="field">研究领域 / 术语约定（可选）<textarea id="setting-domain" rows="2" placeholder="例如：机械视觉；assembly 译为装配，pose 译为位姿。"></textarea></label>
       <div class="settings-row"><label class="field">每批原文单元<select id="setting-batch"><option value="4">4（适合较小的本地模型）</option><option value="8">8</option><option value="12">12</option><option value="20">20</option></select></label><label class="field">阅读外观<select id="setting-theme"><option value="paper">纸张</option><option value="light">明亮</option><option value="dark">夜间</option></select></label></div>
       <div id="connection-result" class="connection-result" role="status"></div>

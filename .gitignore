@@ -1,0 +1,39 @@
+# Local credentials and machine-specific settings
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*secrets*.json
+config.local.*
+settings.local.*
+
+# Reading archives, original papers, and personal notes
+*.pdf
+*.句读.json
+!examples/layout-demo.句读.json
+*-阅读笔记.*
+*-词库.json
+data/
+user-data/
+browser-profile/
+playwright-profile/
+
+# Generated packages, portable runtime, caches and editor files
+runtime/
+dist/
+build/
+*.zip
+*.log
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+.venv/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

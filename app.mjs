@@ -11,7 +11,10 @@ const defaultSettings = { protocol: 'compatible', baseUrl: '', model: '', domain
 let settings = { ...defaultSettings };
 try { settings = { ...settings, ...JSON.parse(localStorage.getItem('sentence-reader-settings') || '{}') }; } catch {}
 let secret = '', project = null, pdf = null, translatedPdf = null, db = null, library = [];
-let busy = false, stopRequested = false, saveTimer, toastTimer, editMode = '', editGroupIndex = -1;
+const modelSessions = new Map();
+let availableModels = [], modelsRequest = 0, modelsController = null;
+let busy = false, translating = false, stopRequested = false, saveTimer, toastTimer, editMode = '', editGroupIndex = -1;
+const readingBlocked = () => busy && !translating;
 let sourceNodes = new Map(), targetNodes = new Map(), pdfRenderId = 0;
 let selectionRequest = 0, pageRequest = 0;
 const documentError = error => showError(new Error('PDF 显示失败：' + error.message));
@@ -33,7 +36,7 @@ const sourcePages = unit => [...unit.anchors, ...(unit.pdfBoxes || [])];
 const firstPage = unit => unit && sourcePages(unit)[0]?.page;
 
 const readingTools = new ReadingTools({
-  get: () => ({ project, pdf, translatedPdf, busy, domain: settings.domain, config: { protocol: settings.protocol, baseUrl: settings.baseUrl, model: settings.model, apiKey: secret } }),
+  get: () => ({ project, pdf, translatedPdf, busy, domain: settings.domain, config: modelConfig() }),
   select: selectIds, save: saveSoon, toast, error: showError, targetView: setTargetView,
   refresh: (geometry = false) => {
     if (geometry) { pdfPane.invalidate(); pairedPane.invalidate(); }
@@ -171,7 +174,7 @@ function renderSource() {
       $('source-text').append(paragraph);
     }
     const node = document.createElement('button'); node.className = 'source-sentence'; node.type = 'button'; node.dataset.sourceId = unit.source_id;
-    node.textContent = unit.text; node.disabled = busy; node.setAttribute('aria-label', '原文第 ' + (sourceNodes.size + 1) + ' 句：' + unit.text);
+    node.textContent = unit.text; node.disabled = readingBlocked(); node.setAttribute('aria-label', '原文第 ' + (sourceNodes.size + 1) + ' 句：' + unit.text);
     node.addEventListener('pointerdown', () => document.getSelection()?.removeAllRanges());
     node.addEventListener('click', event => {
       if (event.detail === 0) document.getSelection()?.removeAllRanges();
@@ -204,7 +207,7 @@ function renderTargets() {
     article.classList.toggle('reader-heading', src.length < 100 && /^(?:\d+(?:\.\d+)*\.?\s+)?(?:abstract|introduction|conclusion[s]?|discussion|references|methods?|results?|\d+\.?\s)/i.test(src));
     article.dataset.paragraphId = project.units.find(u => u.source_id === group.source_ids[0])?.paragraph_id || '';
     const text = document.createElement('button'); text.type = 'button'; text.className = 'translation-content' + (group.translation ? '' : ' pending');
-    text.disabled = busy; text.textContent = group.translation || '等待翻译…';
+    text.disabled = readingBlocked(); text.textContent = group.translation || '等待翻译…';
     text.addEventListener('pointerdown', () => document.getSelection()?.removeAllRanges());
     text.addEventListener('click', () => selectIds(group.source_ids, 'target'));
     article.append(meta, text); $('target-text').append(article);
@@ -225,11 +228,11 @@ function updateHighlights() {
   if (!project) return;
   const active = new Set(project.activeIds);
   const groupsById = new Map(project.groups.map(g => [g.source_ids[0], g]));
-  for (const [id, node] of sourceNodes) { const on = active.has(id); node.classList.toggle('linked', on); node.setAttribute('aria-pressed', String(on)); node.disabled = busy; }
+  for (const [id, node] of sourceNodes) { const on = active.has(id); node.classList.toggle('linked', on); node.setAttribute('aria-pressed', String(on)); node.disabled = readingBlocked(); }
   for (const node of new Set(targetNodes.values())) {
     const group = groupsById.get(node.dataset.groupId);
     const on = group.source_ids.some(id => active.has(id)); node.classList.toggle('linked', on);
-    node.querySelector('button').setAttribute('aria-pressed', String(on)); node.querySelector('button').disabled = busy;
+    node.querySelector('button').setAttribute('aria-pressed', String(on)); node.querySelector('button').disabled = readingBlocked();
   }
   if (project.view === 'pdf') pdfPane.highlight(project.activeIds);
   if (isLayout()) { if (translatedPdf) pairedPane.highlight(project.activeIds); else translatedPane.highlight(project.activeIds); }
@@ -341,7 +344,7 @@ function renderTranslatedPdf() {
   return targetRenderPromise;
 }
 async function jumpPage(number) {
-  if (!pdf || busy || project?.view !== 'pdf') return;
+  if (!pdf || readingBlocked() || project?.view !== 'pdf') return;
   const request = ++pageRequest, current = project; selectionRequest++;
   number = Math.max(1, Math.min(pdf.numPages, Number(number) || 1));
   const valid = () => request === pageRequest && project === current;
@@ -390,10 +393,52 @@ function openSettings() {
   $('setting-protocol').value = settings.protocol; $('setting-url').value = settings.baseUrl;
   $('setting-model').value = settings.model; $('setting-key').value = secret; $('setting-domain').value = settings.domain;
   $('setting-batch').value = String(settings.batch); $('setting-theme').value = settings.theme; $('connection-result').textContent = '';
+  resetModelList();
   $('settings-dialog').showModal();
+}
+function resetModelList() {
+  modelsRequest++; modelsController?.abort(); modelsController = null; availableModels = [];
+  $('setting-model-list').replaceChildren(); $('setting-model-list').hidden = true;
+  $('setting-model-filter').value = ''; $('setting-model-filter').hidden = true; $('setting-model').hidden = false;
+  $('load-models').disabled = false; $('load-models').textContent = '读取模型列表';
+  $('model-list-status').textContent = '填写服务地址与密钥后读取；也可手动输入模型名称。';
+}
+function renderModelList() {
+  const query = $('setting-model-filter').value.trim().toLowerCase(), current = $('setting-model').value.trim();
+  const matches = availableModels.filter(name => name.toLowerCase().includes(query));
+  const manual = document.createElement('option'); manual.value = ''; manual.textContent = '选择模型，或手动输入…';
+  $('setting-model-list').replaceChildren(manual, ...matches.map(name => { const option = document.createElement('option'); option.value = name; option.textContent = name; return option; }));
+  $('setting-model-list').value = matches.includes(current) ? current : '';
+  $('setting-model').hidden = !!$('setting-model-list').value;
+  $('model-list-status').textContent = query ? `匹配 ${matches.length} / ${availableModels.length} 个模型；可选择或手动输入。` : `已读取 ${availableModels.length} 个模型，请从列表选择；也可手动输入。`;
+}
+async function loadModelList() {
+  if (!$('setting-url').value.trim()) { $('model-list-status').textContent = '请先填写服务地址。'; $('setting-url').focus(); return; }
+  resetModelList(); const request = modelsRequest, controller = modelsController = new AbortController();
+  $('load-models').disabled = true; $('load-models').textContent = '正在读取…'; $('model-list-status').textContent = '正在读取模型列表…';
+  try {
+    const response = await fetch('/api/models', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ config: modelConfig(formConfig()) }) });
+    const result = await response.json();
+    if (request !== modelsRequest) return;
+    if (response.status === 404) throw new Error('请重启新版启动程序并刷新页面，再读取模型列表。');
+    if (!response.ok) throw new Error(result.error || '读取失败，仍可手动输入模型名称。');
+    if (!Array.isArray(result.models) || !result.models.every(name => typeof name === 'string' && name.trim())) throw new Error('模型列表格式暂不支持，仍可手动输入模型名称。');
+    availableModels = result.models;
+    if (!availableModels.length) { $('model-list-status').textContent = '服务返回了空列表，仍可手动输入模型名称。'; return; }
+    $('setting-model-list').hidden = false; $('setting-model-filter').hidden = false; renderModelList();
+  } catch (error) {
+    if (request === modelsRequest && error.name !== 'AbortError') $('model-list-status').textContent = error.message || '读取失败，仍可手动输入模型名称。';
+  } finally {
+    if (request === modelsRequest) { modelsController = null; $('load-models').disabled = false; $('load-models').textContent = '重新读取'; }
+  }
 }
 function formConfig() {
   return { protocol: $('setting-protocol').value, baseUrl: $('setting-url').value.trim(), model: $('setting-model').value.trim(), apiKey: $('setting-key').value.trim() };
+}
+function modelConfig(override = null) {
+  const id = project?.id || 'connection-test';
+  if (!modelSessions.has(id)) modelSessions.set(id, crypto.randomUUID());
+  return { ...(override || { protocol: settings.protocol, baseUrl: settings.baseUrl, model: settings.model, apiKey: secret }), sessionId: modelSessions.get(id) };
 }
 async function requestTranslation(units, config = null) {
   const first = project.units.findIndex(u => u.source_id === units[0].source_id), last = first + units.length;
@@ -401,7 +446,7 @@ async function requestTranslation(units, config = null) {
     body: JSON.stringify({ sourceUnits: units.map(({ source_id, paragraph_id, text }) => ({ source_id, paragraph_id, text })),
       contextBefore: first >= 0 ? project.units.slice(Math.max(0, first - 4), first).map(u => u.text).join(' ') : '',
       contextAfter: first >= 0 ? project.units.slice(last, last + 4).map(u => u.text).join(' ') : '',
-      domain: [settings.domain, ...termsFor(project, readingTools.personal).filter(t => !t.builtin).map(t => t.term + ' = ' + t.chinese + (t.meaning ? '（' + t.meaning + '）' : ''))].filter(Boolean).join('\n'), config: config || { protocol: settings.protocol, baseUrl: settings.baseUrl, model: settings.model, apiKey: secret } }) });
+      domain: [settings.domain, ...termsFor(project, readingTools.personal).filter(t => !t.builtin).map(t => t.term + ' = ' + t.chinese + (t.meaning ? '（' + t.meaning + '）' : ''))].filter(Boolean).join('\n'), config: modelConfig(config) }) });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || '翻译失败');
   return result;
@@ -409,7 +454,7 @@ async function requestTranslation(units, config = null) {
 async function runTranslation(onlyGroup = null) {
   if (busy || project.externalLayout) return;
   if (!settings.baseUrl || !settings.model) { openSettings(); toast('先填写翻译服务地址和模型名称。'); return; }
-  clearError(); stopRequested = false; setBusy(true); $('stop-translate').hidden = false; $('stop-translate').disabled = false; $('stop-translate').textContent = '完成本批后停止';
+  clearError(); stopRequested = false; translating = true; setBusy(true); $('stop-translate').hidden = false; $('stop-translate').disabled = false; $('stop-translate').textContent = '完成本批后停止';
   const batches = onlyGroup ? [project.units.filter(u => onlyGroup.source_ids.includes(u.source_id))] : planBatches(project, Number(settings.batch));
   let finished = 0;
   try {
@@ -424,7 +469,7 @@ async function runTranslation(onlyGroup = null) {
     }
     activity(stopRequested ? '已暂停 · 已生成的译文已保留，可继续翻译未完成部分' : '本轮翻译完成 · 编号检查通过，语义仍需核对');
   } catch (error) { showError(error); activity('翻译已停止 · 已完成的批次保留，未通过检查的批次未写入'); }
-  finally { setBusy(false); $('stop-translate').hidden = true; }
+  finally { translating = false; setBusy(false); $('stop-translate').hidden = true; }
 }
 
 async function importPdf(file) {
@@ -550,7 +595,7 @@ $('previous-sentence').onclick = () => { document.getSelection()?.removeAllRange
 $('next-sentence').onclick = () => { document.getSelection()?.removeAllRanges(); const last = project.units.findIndex(u => u.source_id === project.activeIds.at(-1)); if (last < project.units.length - 1) selectIds([project.units[last + 1].source_id], 'nav'); };
 $('previous-sentence').title = '上一句 · ↑ / ← / K'; $('next-sentence').title = '下一句 · ↓ / → / J'; $('font-minus').title = '减小字号'; $('font-plus').title = '增大字号';
 document.addEventListener('keydown', event => {
-  if (!project || busy || event.isComposing || event.ctrlKey || event.metaKey || event.shiftKey || document.querySelector('dialog[open]')) return;
+  if (!project || readingBlocked() || event.isComposing || event.ctrlKey || event.metaKey || event.shiftKey || document.querySelector('dialog[open]')) return;
   if (event.target.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"])')) return;
   const key = event.key.toLowerCase();
   const next = (!event.altKey && (key === 'j' || event.key === 'ArrowDown' || event.key === 'ArrowRight')) || (event.altKey && event.key === 'ArrowDown');
@@ -588,7 +633,19 @@ $('settings-form').onsubmit = event => {
 };
 $('setting-protocol').onchange = () => {
   if ($('setting-protocol').value === 'ollama' && !$('setting-url').value) $('setting-url').value = 'http://127.0.0.1:11434';
+  resetModelList();
 };
+for (const id of ['setting-url', 'setting-key']) $(id).addEventListener('input', resetModelList);
+$('load-models').onclick = loadModelList;
+$('setting-model-filter').oninput = renderModelList;
+$('setting-model-filter').onkeydown = event => { if (event.key === 'Enter') event.preventDefault(); };
+$('setting-model-list').onchange = () => {
+  const value = $('setting-model-list').value;
+  if (value) $('setting-model').value = value;
+  $('setting-model').hidden = !!value;
+  if (!value) $('setting-model').focus();
+};
+$('settings-dialog').addEventListener('close', resetModelList);
 $('test-connection').onclick = async () => {
   $('test-connection').disabled = true; $('connection-result').textContent = '正在请求一个简短的翻译测试…';
   try { const result = await requestTranslation([{ source_id: 'connection_test', text: 'This is a connection test.', paragraph_id: 'test' }], formConfig()); $('connection-result').textContent = '连接成功，编号检查通过。\n' + result.groups[0].translation; }

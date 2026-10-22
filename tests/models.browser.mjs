@@ -1,0 +1,98 @@
+// Optional model-selector regression. Uses mocked discovery, no real credentials.
+import assert from 'node:assert/strict';
+import { chromium } from 'playwright';
+
+const base = process.env.READER_TEST_URL || 'http://127.0.0.1:8765';
+const browser = await chromium.launch({ headless: true, ...(process.env.READER_BROWSER ? { executablePath: process.env.READER_BROWSER } : {}) });
+try {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+  const errors = [], requests = [], pending = []; let waiting;
+  page.on('pageerror', error => errors.push(error.message));
+  await page.route('**/api/models', route => {
+    const request = { route, body: route.request().postDataJSON(), method: route.request().method() };
+    requests.push(request);
+    if (waiting) { const resolve = waiting; waiting = null; resolve(request); } else pending.push(request);
+  });
+  const next = () => pending.length ? Promise.resolve(pending.shift()) : new Promise(resolve => { waiting = resolve; });
+  const load = async () => { await page.locator('#load-models').click(); return next(); };
+  const respond = (request, models) => request.route.fulfill({ json: { models } });
+  const status = page.locator('#model-list-status'), list = page.locator('#setting-model-list'), input = page.locator('#setting-model');
+  const sentinel = 'example-only-credential-not-a-real-key';
+  await page.goto(base); await page.waitForSelector('.source-sentence');
+  await page.locator('#open-settings').click();
+  assert.equal(requests.length, 0, 'Opening settings must not contact a provider');
+  await page.locator('#load-models').click(); await status.getByText('请先填写服务地址。', { exact: true }).waitFor();
+  assert.equal(requests.length, 0);
+  await page.locator('#setting-url').fill('https://api.example.test/v1/chat/completions');
+  await page.locator('#setting-key').fill(sentinel);
+  const first = await load();
+  assert.equal(first.method, 'POST');
+  assert.deepEqual(Object.keys(first.body), ['config'], 'Discovery must not carry paper text');
+  assert.equal(first.body.config.apiKey, sentinel);
+  assert.equal(first.body.config.model, '', 'A model must not be required to discover models');
+  assert.equal(await page.locator('#load-models').isDisabled(), true);
+  const unsafe = '<img src=x onerror="window.modelMarkupExecuted=true">';
+  await respond(first, ['deepseek-v4-pro', 'deepseek-v4.1-flash', 'qwen3:8b', unsafe]);
+  await status.getByText('已读取 4 个模型，请从列表选择；也可手动输入。', { exact: true }).waitFor();
+  assert.equal(await list.locator('option').count(), 5);
+  assert.equal(await page.locator('#settings-dialog img').count(), 0, 'Model names must render as text');
+  assert.equal(await page.evaluate(() => window.modelMarkupExecuted), undefined);
+  await page.locator('#setting-model-filter').fill('V4-PRO');
+  assert.equal(await list.locator('option').count(), 2);
+  await page.locator('#setting-model-filter').press('Enter');
+  assert.equal(await page.locator('#settings-dialog').isVisible(), true, 'Search Enter must not save settings');
+  await list.selectOption('deepseek-v4-pro');
+  assert.equal(await input.inputValue(), 'deepseek-v4-pro');
+  assert.equal(await input.isHidden(), true);
+  await page.locator('#setting-model-filter').fill('not-a-model');
+  assert.equal(await input.inputValue(), 'deepseek-v4-pro', 'Filtering must preserve the selected model name');
+  assert.equal(await list.locator('option').count(), 1);
+  await page.locator('#setting-model-filter').fill('');
+  await list.selectOption(''); await input.fill('custom-model');
+  await page.locator('#settings-form button[type=submit]').click();
+  const saved = await page.evaluate(() => localStorage.getItem('sentence-reader-settings'));
+  assert.equal(JSON.parse(saved).model, 'custom-model');
+  assert.equal(saved.includes(sentinel), false, 'API keys must stay out of saved settings');
+  assert.equal(saved.includes(unsafe), false, 'Fetched lists must not be persisted');
+
+  await page.locator('#open-settings').click();
+  assert.equal(await list.isHidden(), true);
+  const stale = await load();
+  await page.locator('#setting-url').fill('https://other.example.test/v1');
+  await respond(stale, ['stale-model']);
+  assert.equal(await list.isHidden(), true, 'Changing providers must discard in-flight results');
+  const fresh = await load(); assert.equal(fresh.body.config.baseUrl, 'https://other.example.test/v1');
+  await respond(fresh, ['new-model']); await list.waitFor();
+  assert.deepEqual(await list.locator('option').allTextContents(), ['选择模型，或手动输入…', 'new-model']);
+  assert.equal(await input.inputValue(), 'custom-model', 'Discovery must preserve a custom model absent from the list');
+  await list.selectOption('new-model');
+  await page.locator('#setting-key').fill('another-example-credential');
+  assert.equal(await list.isHidden(), true, 'Changing credentials must discard the old account list');
+  assert.equal(await input.inputValue(), 'new-model');
+  const failure = await load();
+  await failure.route.fulfill({ status: 422, json: { error: '服务不提供当前接口的模型列表（HTTP 404），仍可手动输入模型名称。' } });
+  await status.getByText('服务不提供当前接口的模型列表（HTTP 404），仍可手动输入模型名称。', { exact: true }).waitFor();
+  assert.equal(await input.isVisible(), true); assert.equal(await input.inputValue(), 'new-model');
+  assert.equal(await page.locator('#load-models').isEnabled(), true);
+  const empty = await load(); await respond(empty, []);
+  await status.getByText('服务返回了空列表，仍可手动输入模型名称。', { exact: true }).waitFor();
+
+  await page.locator('#setting-protocol').selectOption('ollama');
+  await page.locator('#setting-url').fill('http://127.0.0.1:11434/api/chat');
+  await page.locator('#setting-key').fill('');
+  const local = await load();
+  assert.equal(local.body.config.protocol, 'ollama'); assert.equal(local.body.config.apiKey, '');
+  await respond(local, ['qwen3:8b', 'qwen3:14b']); await list.waitFor();
+  await list.selectOption('qwen3:8b');
+  assert.equal(await input.inputValue(), 'qwen3:8b');
+  if (process.env.READER_SCREENSHOT) await page.screenshot({ path: process.env.READER_SCREENSHOT });
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.locator('#settings-dialog').evaluate(node => node.scrollWidth <= node.clientWidth + 1), true, 'Settings must fit narrow screens');
+  if (process.env.READER_NARROW_SCREENSHOT) await page.screenshot({ path: process.env.READER_NARROW_SCREENSHOT });
+  await page.locator('#settings-form button[type=submit]').click();
+  assert.equal(JSON.parse(await page.evaluate(() => localStorage.getItem('sentence-reader-settings'))).model, 'qwen3:8b');
+  assert.deepEqual(errors, []);
+  console.log('PASS: discovery without a model or paper text, loading, search, selection, manual fallback, stale requests, provider/key switching, empty/error results, Ollama, privacy and narrow screens.');
+} finally {
+  await browser.close();
+}

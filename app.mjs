@@ -22,7 +22,7 @@ const pdfPane = new PdfDocumentPane($('pdf-container'), host => new PdfPane(host
   onVisible: number => { if (project?.view === 'pdf') { project.page = number; updatePageControls(); saveSoon(); } }, onError: documentError
 });
 const translatedPane = new PdfDocumentPane($('translated-pdf-container'), host => new TranslatedPdfPane(host, ids => selectIds(ids, 'layout'), ids => expandLayout(ids)), {
-  preview: true, onError: documentError
+  preview: true, onVisible: updateLayoutStatus, onRendered: updateLayoutStatus, onError: documentError
 });
 const pairedPane = new PdfDocumentPane($('translated-pdf-container'), host => new PdfPane(host, ids => selectIds(ids, 'layout')), {
   onVisible: number => { if (project && translatedPdf) { project.targetPage = number; saveSoon(); } }, onError: documentError
@@ -220,6 +220,7 @@ function updateSummary() {
   const translated = project.groups.filter(g => g.translation).reduce((n, g) => n + g.source_ids.length, 0);
   const pendingReview = project.groups.filter(g => g.translation && g.needs_review && !g.reviewed).length;
   $('translation-summary').textContent = `已译 ${translated}/${project.units.length}${pendingReview ? ` · ${pendingReview} 组待核对` : ''}`;
+  $('translation-summary').title = '已译表示已收到译文；论文版式中的公式或复杂区域可能保留原样，点击可查看完整中文。';
   $('translate').textContent = translated === project.units.length ? '全部已译' : '翻译未完成部分';
   $('translate').disabled = busy || project.externalLayout || translated === project.units.length;
 }
@@ -279,9 +280,10 @@ async function selectIds(ids, origin = 'source', save = true) {
       else sourceNodes.get(first)?.scrollIntoView({ block: origin === 'nav' ? 'center' : 'nearest', behavior: 'instant' });
     }
     await Promise.all(jobs);
-    if (valid() && settings.focus && isLayout() && !translatedPdf && $('reader-desk').hidden) {
-      const clipped = [...$('translated-pdf-container').querySelectorAll('.layout-sentence')].some(node => node.dataset.layoutIds.split(' ').some(id => activeIds.includes(id)) && (node.closest('.layout-overflow') || node.classList.contains('continuation')));
-      if (clipped) readingTools.open('reading');
+    if (valid() && isLayout() && !translatedPdf && $('reader-desk').hidden) {
+      const retained = [...$('translated-pdf-container').querySelectorAll('[data-retained-translation]')].some(node => node.dataset.layoutIds.split(' ').some(id => activeIds.includes(id)));
+      const clipped = settings.focus && [...$('translated-pdf-container').querySelectorAll('.layout-sentence')].some(node => node.dataset.layoutIds.split(' ').some(id => activeIds.includes(id)) && (node.closest('.layout-overflow') || node.classList.contains('continuation')));
+      if (retained || clipped) readingTools.open('reading');
     }
   }
   if (save && valid()) saveSoon();
@@ -338,10 +340,19 @@ function renderTranslatedPdf() {
       if (token !== targetRenderId) return;
       if (opening && position) pane.restorePosition(position);
       pane.highlight(project.activeIds);
-      $('layout-status').textContent = translatedPdf ? '中文 PDF · 连续滚动 · 双向句子定位' : '连续滚动 · 图表与公式保留 · 放不下的译文可展开';
+      updateLayoutStatus();
     } catch (error) { if (token === targetRenderId) showError(new Error('中文版式显示失败，可切换“逐句”阅读：' + error.message)); }
   })();
   return targetRenderPromise;
+}
+function updateLayoutStatus() {
+  if (!isLayout()) return;
+  if (translatedPdf) { $('layout-status').textContent = '中文 PDF · 连续滚动 · 双向句子定位'; return; }
+  const number = translatedPane.visiblePage || project.page || 1;
+  const stats = translatedPane.records[number - 1]?.stats;
+  $('layout-status').textContent = stats?.retainedTranslated
+    ? `第 ${number} 页 · ${stats.retainedTranslated} 处已译内容保留原样，点击查看中文`
+    : '连续滚动 · 图表与公式保留 · 放不下的译文可展开';
 }
 async function jumpPage(number) {
   if (!pdf || readingBlocked() || project?.view !== 'pdf') return;

@@ -1,8 +1,8 @@
 // Continuous page slots keep their dimensions when their canvases are unloaded.
 // Rendering and navigation have separate lifetimes: scrolling never selects text.
 export class PdfDocumentPane {
-  constructor(container, factory, { preview = false, onVisible = () => {}, onError = () => {} } = {}) {
-    Object.assign(this, { container, factory, preview, onVisible, onError });
+  constructor(container, factory, { preview = false, onVisible = () => {}, onRendered = () => {}, onError = () => {} } = {}) {
+    Object.assign(this, { container, factory, preview, onVisible, onRendered, onError });
     this.scroll = container.parentElement; this.generation = 0; this.records = []; this.ids = [];
     container.classList.add('pdf-document');
     this.scroll.addEventListener('scroll', () => {
@@ -16,7 +16,7 @@ export class PdfDocumentPane {
     this.records = []; this.pdf = null; this.container.replaceChildren(); this.ids = [];
   }
   invalidate() {
-    for (const record of this.records) { record.renderer?.clear(); record.renderer = null; record.promise = null; }
+    for (const record of this.records) { record.renderer?.clear(); record.renderer = null; record.promise = null; record.stats = null; }
     this.revision = (this.revision || 0) + 1;
     for (const record of this.records) { this.observer?.unobserve(record.slot); this.observer?.observe(record.slot); }
   }
@@ -83,7 +83,7 @@ export class PdfDocumentPane {
         ? await renderer.render(this.pdf, number, this.units, this.groups, 1)
         : await renderer.render(this.pdf, number, this.units, 1, this.crops?.[number]);
       if (generation !== this.generation || revision !== this.revision || record.renderer !== renderer) return;
-      record.stats = result; renderer.setFocus?.(this.focus); renderer.highlight(this.ids); this.evict(); return result;
+      record.stats = result; renderer.setFocus?.(this.focus); renderer.highlight(this.ids); this.onRendered(number, result); this.evict(); return result;
     })().catch(error => {
       if (generation !== this.generation || record.renderer !== renderer) return;
       record.promise = null; throw error;

@@ -6,6 +6,27 @@ import { preparePdfCanvas } from './pdf-rendering.mjs';
 const middle = values => values.filter(n => n > 0).sort((a, b) => a - b)[Math.floor(values.filter(n => n > 0).length / 2)] || 10;
 const intersects = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 
+// PDF text runs put superscripts/subscripts on separate baselines. Attach small
+// runs to nearby prose before constructing regions, or the script's bounding
+// box can make the entire translated paragraph look like overlapping artwork.
+function layoutLines(items, width) {
+  const lines = orderLines(items, width);
+  const typical = middle(lines.map(line => line.h)), attached = new Set();
+  for (const script of lines) {
+    if (script.h > typical * .85 || script.tokens.map(t => t.str).join('').length > 32) continue;
+    const body = lines.filter(line => line !== script && !attached.has(line)
+      && script.h < line.h * .85 && line.h <= typical * 1.3
+      && Math.abs(script.y - line.y) <= line.h * .85
+      && script.x >= line.x - line.h * .2 && script.right <= line.right + line.h * .4
+      && (line.tokens.map(t => t.str).join(' ').match(/[A-Za-z]{3,}/g) || []).length >= 4)
+      .sort((a, b) => Math.abs(a.y - script.y) - Math.abs(b.y - script.y))[0];
+    if (!body) continue;
+    body.tokens.push(...script.tokens); body.tokens.sort((a, b) => a.x - b.x || b.y - a.y);
+    body.right = Math.max(body.right, script.right); attached.add(script);
+  }
+  return lines.filter(line => !attached.has(line));
+}
+
 // Regions follow the source geometry. Translation groups keep their IDs even when
 // their source spans more than one region, column, or page.
 function pageRegions(content, page, units, viewport, divs, wrapper) {
@@ -17,7 +38,7 @@ function pageRegions(content, page, units, viewport, divs, wrapper) {
   let index = 0;
   const items = content.items.filter(item => typeof item.str === 'string').map(item => ({ ...item, itemIndex: index++ }));
   const scale = viewport.scale, baseWidth = viewport.width / scale;
-  const lines = orderLines(items, baseWidth);
+  const lines = layoutLines(items, baseWidth);
   const typical = middle(lines.map(l => l.h));
   const regions = [];
   const rectFor = (itemIndex, start, end) => {
@@ -73,7 +94,7 @@ function pageRegions(content, page, units, viewport, divs, wrapper) {
     const isHeading = /^(?:\d+(?:\.\d+)*\.?\s*)?(?:abstract|introduction|conclusion[s]?|discussion|references|acknowledg\w*|method\w*|result[s]?|experiment\w*|background|related work|appendix)\b/i.test(text.trim());
     // Small diagram labels, numeric tables, author names and display equations
     // remain in the original canvas; captions and prose are replaceable.
-    region.replaceable = !region.formula && (words.length >= 6 || isHeading || (region.fontSize > typical * scale * 1.3 && words.length >= 3));
+    region.replaceable = !region.formula && (words.length >= 6 || isHeading || (region.fontSize > typical * scale * 1.15 && words.length >= 3));
     region.heading = region.fontSize > typical * scale * 1.2 || isHeading && words.length < 7;
     const fontNames = region.lines.flatMap(l => l.tokens.map(t => t.fontName));
     region.fontNames = [...new Set(fontNames)];
@@ -142,7 +163,8 @@ export class TranslatedPdfPane {
     for (const region of regions) if (region.replaceable && !rotated) for (const id of region.ids) {
       const group = groupById.get(id); if (!firstRegion.has(group)) firstRegion.set(group, region);
     }
-    const stats = { replaced: 0, overflow: 0, retained: 0, rotated, page: number };
+    const stats = { replaced: 0, overflow: 0, retained: 0, retainedTranslated: 0, rotated, page: number };
+    const retainedGroups = new Set();
     const attach = (node, ids) => {
       node.sourceIds = ids; node.dataset.layoutIds = ids.join(' '); node.type = 'button'; this.nodes.push(node);
       if (node.tagName !== 'BUTTON') { node.setAttribute('role', 'button'); node.tabIndex = 0; node.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); node.click(); } }); }
@@ -160,8 +182,13 @@ export class TranslatedPdfPane {
           const id = box.sourceId, unit = units.find(u => u.source_id === id), group = groupById.get(id);
           const hit = document.createElement('button'); hit.className = 'layout-original-hit';
           Object.assign(hit.style, { left: box.left + 'px', top: box.top + 'px', width: box.right - box.left + 'px', height: box.bottom - box.top + 'px' });
-          hit.setAttribute('aria-label', group?.translation || unit.text); hit.title = group?.translation ? '保留原样 · 点击定位，使用“所选译文全文”阅读中文' : '尚未翻译 · 点击定位原文';
-          attach(hit, group?.source_ids || [id]); wrapper.append(hit);
+          hit.setAttribute('aria-label', group?.translation || unit.text); hit.title = group?.translation ? '此处已译，版式保留原样 · 点击查看完整中文' : '尚未翻译 · 点击定位原文';
+          attach(hit, group?.source_ids || [id]);
+          if (group?.translation) {
+            hit.dataset.retainedTranslation = 'true'; retainedGroups.add(group);
+            hit.addEventListener('click', () => this.onExpand(group.source_ids));
+          }
+          wrapper.append(hit);
         }
         continue;
       }
@@ -206,6 +233,7 @@ export class TranslatedPdfPane {
         for (const node of flow.querySelectorAll('.layout-sentence')) node.addEventListener('click', () => this.onExpand(node.sourceIds));
       }
     }
+    stats.retainedTranslated = retainedGroups.size;
     measurement.remove(); if (token !== this.token) return;
     wrapper.dataset.layoutReady = String(number); return stats;
   }

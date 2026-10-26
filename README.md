@@ -8,18 +8,20 @@
 
 ![专注阅读、保留版式与完整译文侧栏](examples/reading-tools-preview.png)
 
-> 当前版本：**v0.4.5，实验版**。支持可选中文字的 PDF 和粘贴的网页正文。阅读、定位、笔记在本机完成；翻译和难句解释使用你自行配置的服务。
+> 当前版本：**v0.4.6，实验版**。支持可选中文字的 PDF 和粘贴的网页正文。阅读、定位、笔记在本机完成；翻译和难句解释使用你自行配置的服务。
 
 ## 先体验，再配置
 
 ### Windows：便携包
 
-1. 在 [Releases](https://github.com/AnderroleWang/sentence-reader/releases) 下载 `sentence-reader-v0.4.5-windows-x64.zip`，**解压整个文件夹**。
-2. 双击文件夹里的 **`start.cmd`**，保持启动窗口运行。
+1. 在 [Releases](https://github.com/AnderroleWang/sentence-reader/releases) 下载 `sentence-reader-v0.4.6-windows-x64.zip`，**解压整个文件夹**。
+2. 双击文件夹里的 **`句读.exe`**。首次运行自动创建桌面和开始菜单的“句读”快捷方式，以后直接双击桌面图标。
 3. 浏览器自动打开 <http://127.0.0.1:8765/>。首次可直接读自带的双语演示，**不需要密钥**。
 4. 要读自己的论文，导入 PDF，打开右上角“翻译设置”，填写自己的服务地址、模型和密钥。
 
-便携包自带官方 Python 运行环境，面向 **Windows 10/11 x64**；无需管理员权限、pip、npm 或额外安装 Python。不要在压缩包中直接运行，也不要只复制启动文件。建议使用近期版 Edge 或 Chrome。
+便携包自带官方 Python 运行环境，面向 **Windows 10/11 x64**，启动器使用系统自带的 .NET Framework 4；无需管理员权限、pip、npm 或额外安装 Python。运行时没有黑色命令行窗口，右下角系统托盘图标可再次打开页面或退出；关闭网页不会退出服务。重复双击复用已有服务。退出前先结束正在进行的翻译。不要在压缩包中直接运行，也不要只复制 exe 文件。建议使用近期版 Edge 或 Chrome。
+
+解压后把整个文件夹放在固定位置再启动；以后移动文件夹，重新运行其中的 `句读.exe` 即可更新快捷方式。启动器未签名，Windows 可能显示发布者验证提示。`start.cmd` 保留作故障诊断入口。源代码与构建脚本位于 `scripts/windows-launcher.cs`、`scripts/build_windows_launcher.ps1`。
 
 ### 源码版：Windows / macOS / Linux
 
@@ -56,6 +58,8 @@ macOS / Linux 通常使用 `python3 -X utf8 server.py`，也可运行 `sh start.
 **可以边翻译边阅读。** 翻译请求等待期间，上下键、双侧句子点选和 PDF 页码跳转照常使用；批次结果写入会保留当前句子和手动滚动位置。翻译期间暂停改写原文、合并拆分、重译和切换文档，避免覆盖正在处理的内容。
 
 **全部已译，但版式里还有英文？** “已译”统计的是收到的译文。v0.4.5 修复行内上标、下标导致整段正文被保留为英文的误判；公式、旋转页及无法安全重排的区域仍保留原样，页头显示当前页的提示。点击这类区域，或按方向键读到对应句组，会直接打开已有完整中文，无需重新翻译或再次调用 API。需要连续阅读全部译文时可切到“舒展阅读”。
+
+v0.4.6 收紧中文栏宽和绘制边界，保留两栏之间的空白，局部粗体不再让整段变粗；放不下的译文继续通过完整阅读查看，不挤入旁边的正文。
 
 ## 不靠中英文标点猜对应
 
@@ -138,11 +142,14 @@ python -m unittest discover -s tests -v
 
 `tests/layout.browser.mjs` 使用自拟 PDF 验证行内上标不会让已译正文残留英文、独立公式和矢量图仍保留原样，以及原样区域能直接打开已有中文。运行方式与上述浏览器测试相同。
 
+`tests/columns.browser.mjs` 验证三种窗口宽度与三档缩放下的双栏边界、栏间空白、区域不重叠及局部粗体的处理。
+
 发行包使用显式文件清单生成，可选加入官方 Python Windows 嵌入包：
 
 ```bash
 python scripts/build_release.py --output dist
-python scripts/build_release.py --runtime-zip /path/to/python-3.12.10-embed-amd64.zip --output dist
+powershell -File scripts/build_windows_launcher.ps1 -Output build/SentenceReader.exe
+python scripts/build_release.py --runtime-zip /path/to/python-3.12.10-embed-amd64.zip --launcher build/SentenceReader.exe --output dist
 ```
 
 构建脚本扫描常见密钥和本机路径，并输出文件清单、每个文件的 SHA-256 和压缩包校验值；扫描不能识别所有自定义秘密，添加自有文件时仍应检查。

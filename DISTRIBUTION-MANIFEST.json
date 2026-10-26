@@ -1,6 +1,6 @@
 {
   "app": "sentence-reader",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "package": "source",
   "privacy": "Application, documentation and self-authored demo only; no user browser data or API settings.",
   "files": [
@@ -16,8 +16,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 4829,
-      "sha256": "6fa82fbba0b2c04d1b4f3a3e2782064fd3158bd64b34dee741c1339579bfbfbb"
+      "bytes": 5623,
+      "sha256": "3fbd869f568d5c382186ee3f4430fd735fd6adc101700808bcfd6d1fc030e7d3"
     },
     {
       "path": "CONTRIBUTING.md",
@@ -31,8 +31,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 14386,
-      "sha256": "fed65f0279204a176295e3a4afbc56ac12d5daf434dacc581eada78edccc84cb"
+      "bytes": 15535,
+      "sha256": "c6da8a311183714f86bbc7efb6d670ba45fd38d244add6a5c46247007f20da32"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -61,8 +61,8 @@
     },
     {
       "path": "docs/USER_GUIDE.md",
-      "bytes": 23689,
-      "sha256": "e8a94f4a5750ba46149204a07b28042f23ed830930b61818cecb26679e7d2078"
+      "bytes": 24766,
+      "sha256": "3babf9892dd61ff757cbbf6a6df418866bdf5cd49d149d8efb465f1d233c6be8"
     },
     {
       "path": "examples/layout-demo.句读.json",
@@ -87,7 +87,7 @@
     {
       "path": "index.html",
       "bytes": 15192,
-      "sha256": "554b39d019a02f453fa5650266fafc08656fb430f09f4c15270e67989df936bd"
+      "sha256": "504b3d2296c26e8ba267eb5e8eaada16100686a957ea5bfdb18eb9bac7d2ab07"
     },
     {
       "path": "paired-import.mjs",
@@ -121,13 +121,23 @@
     },
     {
       "path": "scripts/build_release.py",
-      "bytes": 7375,
-      "sha256": "f1d052fb745191c3d743f3b01c3b73fdf3d87160ff66659dbcb5b725ca3c5a96"
+      "bytes": 7891,
+      "sha256": "c1ef104ae8dc700d9364618ddf01a091b1e118fb8f8e284d758e26c9d09955ff"
+    },
+    {
+      "path": "scripts/build_windows_launcher.ps1",
+      "bytes": 2925,
+      "sha256": "b592c1b5f761a8d8e2cb24f4aee2f60ee1595a421e525b9a86c5b21bf63432cb"
+    },
+    {
+      "path": "scripts/windows-launcher.cs",
+      "bytes": 8205,
+      "sha256": "7d23b73a455b3896cff1cb7ecf1469fd0ed21fa148669150648887e4de5ea9a5"
     },
     {
       "path": "server.py",
       "bytes": 25311,
-      "sha256": "f6e4b2abbb6eb8ab74dc7c489e2665ee05339dadba16f9b7624e9ac778bb438c"
+      "sha256": "295f752973e3c45dd2247d4a1920c30e174ddc8f230f3565d517960826a7287d"
     },
     {
       "path": "start.cmd",
@@ -141,8 +151,13 @@
     },
     {
       "path": "styles.css",
-      "bytes": 21927,
-      "sha256": "96c72dc262fd5dc9c74ee0a3e817ebac14a828eba76aa1962246faeda73593f0"
+      "bytes": 21977,
+      "sha256": "e582af7db696d415d016729f8de2455ee2c21ce023225de84c07ffbfd0ee2b20"
+    },
+    {
+      "path": "tests/columns.browser.mjs",
+      "bytes": 4659,
+      "sha256": "9813a1e499be935b5b38236aeb72eb18d97addb03942543ef16a9955c4c219f8"
     },
     {
       "path": "tests/layout.browser.mjs",
@@ -171,8 +186,8 @@
     },
     {
       "path": "translated-pdf.mjs",
-      "bytes": 16708,
-      "sha256": "5dc27f5e6aa889c9dc749b4292a4b12fd68e4fe00ebfba2bd43d05baaa4832ac"
+      "bytes": 17783,
+      "sha256": "426c1328da6f3d87f1bf901c0f22f9b2a6ab4d612ac40efa3d21762dcf24e00d"
     },
     {
       "path": "vendor/PDFJS-LICENSE",
@@ -276,8 +291,8 @@
     },
     {
       "path": "开始使用.md",
-      "bytes": 2231,
-      "sha256": "f77b10a91c8a0f5eeae83aee6f3e300d9dbc308aae25fa84876da7e4a39d31ba"
+      "bytes": 2797,
+      "sha256": "f8c032ddd487b9893ab7f00b8e27b418caac3427394a465028fa9ed6a05e89aa"
     }
   ]
 }

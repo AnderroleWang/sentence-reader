@@ -58,7 +58,7 @@ def source_payload(root=ROOT):
     paths = [root / name for name in ROOT_FILES]
     for folder in ("docs", "scripts", "tests"):
         paths += sorted(p for p in (root / folder).rglob("*")
-                        if p.is_file() and p.suffix in {".md", ".py", ".mjs"} and "__pycache__" not in p.parts)
+                        if p.is_file() and p.suffix in {".md", ".py", ".mjs", ".cs", ".ps1"} and "__pycache__" not in p.parts)
     paths += [root / "examples" / name for name in (
         "layout-demo.句读.json", "layout-preview.png", "reading-tools-preview.png")]
     paths += [root / "vendor" / name for name in (
@@ -101,12 +101,19 @@ def add_runtime(payload, archive):
     }, indent=2).encode() + b"\n"
 
 
-def build(output, runtime_zip=None):
+def build(output, runtime_zip=None, launcher=None):
     payload = source_payload()
     version = re.search(r'^VERSION = "([0-9.]+)"', payload["server.py"].decode(), re.M).group(1)
     platform = "source"
     if runtime_zip:
+        if not launcher or not launcher.is_file():
+            raise ValueError("Build the Windows launcher and supply --launcher before packaging the portable app")
         add_runtime(payload, runtime_zip)
+        executable = launcher.read_bytes()
+        if not executable.startswith(b"MZ"):
+            raise ValueError("Expected a Windows launcher executable")
+        audit_bytes("SentenceReader.exe", executable)
+        payload["句读.exe"] = executable
         platform = "windows-x64"
     manifest = {
         "app": "sentence-reader", "version": version, "package": platform,
@@ -141,5 +148,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=ROOT / "dist")
     parser.add_argument("--runtime-zip", type=Path)
+    parser.add_argument("--launcher", type=Path)
     args = parser.parse_args()
-    build(args.output, args.runtime_zip)
+    build(args.output, args.runtime_zip, args.launcher)

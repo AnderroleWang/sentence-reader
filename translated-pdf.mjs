@@ -46,7 +46,16 @@ function pageRegions(content, page, units, viewport, divs, wrapper) {
     if (!text || text.nodeType !== Node.TEXT_NODE || start >= end) return null;
     const range = document.createRange(); range.setStart(text, Math.min(start, text.length)); range.setEnd(text, Math.min(end, text.length));
     const r = range.getBoundingClientRect();
-    return r.width && r.height ? { left: r.left - origin.left, top: r.top - origin.top, right: r.right - origin.left, bottom: r.bottom - origin.top } : null;
+    const item = items[itemIndex], run = divs[itemIndex].getBoundingClientRect();
+    if (!r.width || !r.height || !run.width || !item.width) return null;
+    // Browser font metrics can extend past a PDF run, especially at small zoom.
+    // Map partial selections back into the PDF's own horizontal advance so a
+    // measured line can never steal the adjacent column's gutter.
+    const x = viewport.convertToViewportPoint(item.transform[4], item.transform[5])[0];
+    const width = Math.abs(item.width * scale);
+    const startFraction = Math.max(0, Math.min(1, (r.left - run.left) / run.width));
+    const endFraction = Math.max(startFraction, Math.min(1, (r.right - run.left) / run.width));
+    return { left: x + startFraction * width, top: r.top - origin.top, right: x + endFraction * width, bottom: r.bottom - origin.top };
   };
   let prior = null;
   for (const line of lines) {
@@ -98,6 +107,8 @@ function pageRegions(content, page, units, viewport, divs, wrapper) {
     region.heading = region.fontSize > typical * scale * 1.2 || isHeading && words.length < 7;
     const fontNames = region.lines.flatMap(l => l.tokens.map(t => t.fontName));
     region.fontNames = [...new Set(fontNames)];
+    region.fontWeights = new Map();
+    for (const token of new Set(region.lines.flatMap(l => l.tokens))) region.fontWeights.set(token.fontName, (region.fontWeights.get(token.fontName) || 0) + token.str.trim().length);
     region.centered = region.fontSize > typical * scale * 1.3 && Math.abs((region.left + region.right) / 2 - viewport.width / 2) < viewport.width * .1;
     region.ids = [...region.ids].sort((a, b) => units.indexOf(byId.get(a)) - units.indexOf(byId.get(b)));
   }
@@ -105,7 +116,7 @@ function pageRegions(content, page, units, viewport, divs, wrapper) {
   // catches difficult table cells and interleaved equation baselines.
   for (const region of regions) if (region.replaceable) {
     if (regions.some(other => other !== region && intersects(region, other) &&
-      Math.min(region.right, other.right) - Math.max(region.left, other.left) > region.fontSize * .7 &&
+      Math.min(region.right, other.right) - Math.max(region.left, other.left) > .5 &&
       Math.min(region.bottom, other.bottom) - Math.max(region.top, other.top) > region.fontSize * .3)) region.replaceable = false;
   }
   return regions;
@@ -156,6 +167,7 @@ export class TranslatedPdfPane {
     if (token !== this.token) return;
     const content = await page.getTextContent();
     const textLayer = new pdfjs.TextLayer({ textContentSource: content, container: measurement, viewport }); await textLayer.render();
+    await document.fonts.ready;
     if (token !== this.token) return;
     const regions = pageRegions(content, number, units, viewport, textLayer.textDivs, wrapper);
     const groupById = new Map(); groups.forEach(g => g.source_ids.forEach(id => groupById.set(id, g)));
@@ -203,7 +215,12 @@ export class TranslatedPdfPane {
       const height = Math.max(region.bottom - region.top, region.fontSize * 1.18);
       Object.assign(block.style, { left: region.left + 'px', top: region.top + 'px', width: region.right - region.left + 'px', height: height + 'px', textAlign: region.centered ? 'center' : 'left' });
       const flow = document.createElement('div'); flow.className = 'layout-flow';
-      try { if (region.fontNames.some(name => /bold|black|medium/i.test(page.commonObjs.get(name)?.name || ''))) block.classList.add('bold'); } catch {}
+      let boldWeight = 0, totalWeight = 0;
+      for (const [name, weight] of region.fontWeights) {
+        totalWeight += weight;
+        try { if (/bold|black/i.test(page.commonObjs.get(name)?.name || '')) boldWeight += weight; } catch {}
+      }
+      if (boldWeight > totalWeight * .5) block.classList.add('bold');
       const pageIds = new Set(region.ids);
       for (const group of regionGroups) {
         const node = document.createElement('span'); node.className = 'layout-sentence';

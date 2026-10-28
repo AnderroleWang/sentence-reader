@@ -12,7 +12,7 @@
 <body>
   <div class="app-shell">
     <aside class="sidebar" aria-label="论文库">
-      <div class="brand"><span class="brand-mark">句</span><div><strong>句读</strong><span>让原文与理解相连</span></div><span class="version">0.4.6</span></div>
+      <div class="brand"><span class="brand-mark">句</span><div><strong>句读</strong><span>让原文与理解相连</span></div><span class="version">0.4.7</span></div>
       <div class="import-buttons">
         <button class="primary" id="import-pdf">＋ 导入 PDF</button>
         <button id="import-text">粘贴网页正文</button>
@@ -37,12 +37,17 @@
       </div>
       <div class="reading-workspace" id="reading-workspace"><div class="reading-panes" id="reading-panes">
         <section class="pane source-pane" aria-label="英文原文">
-          <header class="pane-header"><span>ENGLISH <em>原文</em></span><div class="pdf-navigation" id="pdf-navigation" hidden><button id="previous-page" aria-label="上一页">‹</button><label><input type="number" id="page-number" min="1" value="1" aria-label="PDF 页码"><span id="page-total"></span></label><button id="next-page" aria-label="下一页">›</button><select id="pdf-zoom" aria-label="PDF 放大比例"><option value="1">适宽</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option></select></div><span class="pane-hint">点选或拖选句子</span></header>
+          <header class="pane-header"><span>ENGLISH <em>原文</em></span><span class="pane-hint">点选或拖选句子</span></header>
+          <div class="pdf-toolbar" id="pdf-navigation" hidden>
+            <div class="pdf-page-controls"><button id="previous-page" aria-label="上一页">‹</button><label><input type="number" id="page-number" min="1" value="1" aria-label="PDF 页码"><span id="page-total"></span></label><button id="next-page" aria-label="下一页">›</button></div>
+            <div class="pdf-zoom-controls" role="group" aria-label="原文缩放"><span>原文缩放</span><button id="pdf-zoom-out" aria-label="缩小原文">−</button><select id="pdf-zoom" aria-label="原文放大比例"></select><button id="pdf-zoom-in" aria-label="放大原文">＋</button><button id="pdf-zoom-fit" aria-label="原文恢复适宽">适宽</button></div>
+          </div>
           <div id="source-layout-note" class="layout-note" hidden>英文原版 · 连续滚动 · ↑ ↓ 逐句阅读</div>
           <div id="source-scroll" class="pane-scroll"><div id="source-text" lang="en"></div><div id="pdf-container" hidden></div></div>
         </section>
         <section class="pane translation-pane" aria-label="中文译文">
           <header class="pane-header"><span>中文译文</span><div id="target-view-switch" class="view-switch" aria-label="译文显示方式" hidden><button id="target-view-text" aria-pressed="false">逐句</button><button id="target-view-reader" aria-pressed="false">舒展阅读</button><button id="target-view-layout" aria-pressed="true" class="selected">论文版式</button></div><span id="translation-summary" class="pane-hint"></span></header>
+          <div class="pdf-toolbar" id="target-pdf-navigation" hidden><div class="pdf-zoom-controls" role="group" aria-label="译文缩放"><span>译文缩放</span><button id="target-pdf-zoom-out" aria-label="缩小译文">−</button><select id="target-pdf-zoom" aria-label="译文放大比例"></select><button id="target-pdf-zoom-in" aria-label="放大译文">＋</button><button id="target-pdf-zoom-fit" aria-label="译文恢复适宽">适宽</button></div></div>
           <div id="layout-note" class="layout-note" hidden><span id="layout-status">译文按原位排布 · 图表与公式保留</span><button id="layout-read" class="text-button">完整阅读 →</button></div>
           <div id="target-scroll" class="pane-scroll"><div id="target-text" lang="zh-CN"></div><div id="translated-pdf-container" hidden></div></div>
         </section>
@@ -103,7 +108,7 @@
   <dialog id="edit-dialog"><form id="edit-form"><div class="dialog-heading"><h2 id="edit-title">编辑译文</h2><button type="button" class="close-dialog" aria-label="关闭">×</button></div><div id="edit-source" class="source-excerpt"></div><div id="edit-fields"></div><label class="review-check" id="edit-reviewed-row"><input type="checkbox" id="edit-reviewed">我已核对原文和译文</label><div class="dialog-actions"><button type="button" class="close-dialog">取消</button><button type="submit" class="primary">保存</button></div></form></dialog>
 
   <dialog id="help-dialog"><div class="dialog-heading"><h2>从一篇论文开始</h2><button class="close-dialog" aria-label="关闭">×</button></div>
-    <ol class="help-steps"><li>导入可选中文字的 PDF，或粘贴论文网页正文。</li><li>先检查英文识别顺序；PDF 可切换原版和正文。选中有误的单元，用“修正原文”修改。</li><li>在翻译设置填写你的服务地址和模型，再翻译未完成部分。支持分批暂停与续译。</li><li>PDF 右侧可选“论文版式”，中文按原来的栏位、标题和段落位置排布，图表、公式和较短的图内标签保留原样。未翻译区域显示英文；原栏位放不下时，点击句子可在可调宽的阅读区看完整译文；选择“舒展阅读”可自然换行连续读全文。跨栏或跨页的句组不按标点硬拆，可展开阅读整组译文。</li><li>点选或拖选英文，中文对应句组同步高亮；点击中文可反向定位。PDF 两侧均可连续滚动，点击对应句子时定位另一侧；页码可直接跳转。按 ↓ / → / J 下一句、↑ / ← / K 上一句，或 Alt+↓ / Alt+↑，在输入框和弹窗中不会触发切句。两侧可一起放大。“专注阅读”会淡化两侧其余内容；“完整阅读”支持调宽和展开。</li><li>使用“对齐检查”查看漏译、数值及已有警告；可重新配对、合并、拆分，并用撤销 / 重做或 Ctrl+Z / Ctrl+Shift+Z 恢复。已排版 PDF 可以重配已有片段。核对后可做确认标记。</li><li>“解释难句”会调用你配置的模型，结合相邻上下文解释结构、术语与作者意图，每条附原文依据。AI 解释仍需核对。</li><li>“术语”支持悬停释义、自定义本文含义、统一现有译法和个人词库导入 / 导出。“图表 / 公式”可按编号展开原页，关闭后回到当前句。“写批注”自动关联中英文，可导出带原句、译文、页码的笔记。</li><li>阅读位置和文档自动保存在此浏览器。定期导出档案，换浏览器或清理数据前尤其如此。</li></ol>
+    <ol class="help-steps"><li>导入可选中文字的 PDF，或粘贴论文网页正文。</li><li>先检查英文识别顺序；PDF 可切换原版和正文。选中有误的单元，用“修正原文”修改。</li><li>在翻译设置填写你的服务地址和模型，再翻译未完成部分。支持分批暂停与续译。</li><li>PDF 右侧可选“论文版式”，中文按原来的栏位、标题和段落位置排布，图表、公式和较短的图内标签保留原样。未翻译区域显示英文；原栏位放不下时，点击句子可在可调宽的阅读区看完整译文；选择“舒展阅读”可自然换行连续读全文。跨栏或跨页的句组不按标点硬拆，可展开阅读整组译文。</li><li>点选或拖选英文，中文对应句组同步高亮；点击中文可反向定位。PDF 两侧均可连续滚动，点击对应句子时定位另一侧；页码可直接跳转。按 ↓ / → / J 下一句、↑ / ← / K 上一句，或 Alt+↓ / Alt+↑，在输入框和弹窗中不会触发切句。原文和译文各有独立缩放按钮，可分别调节到 300%，点“适宽”恢复；放大后可横向滚动。“专注阅读”会淡化两侧其余内容；“完整阅读”支持调宽和展开。</li><li>使用“对齐检查”查看漏译、数值及已有警告；可重新配对、合并、拆分，并用撤销 / 重做或 Ctrl+Z / Ctrl+Shift+Z 恢复。已排版 PDF 可以重配已有片段。核对后可做确认标记。</li><li>“解释难句”会调用你配置的模型，结合相邻上下文解释结构、术语与作者意图，每条附原文依据。AI 解释仍需核对。</li><li>“术语”支持悬停释义、自定义本文含义、统一现有译法和个人词库导入 / 导出。“图表 / 公式”可按编号展开原页，关闭后回到当前句。“写批注”自动关联中英文，可导出带原句、译文、页码的笔记。</li><li>阅读位置和文档自动保存在此浏览器。定期导出档案，换浏览器或清理数据前尤其如此。</li></ol>
     <p class="muted">第一版不支持扫描件 OCR、网页网址直接抓取或短语级精准对齐。复杂表格与公式附近的识别结果需要检查。“已生成”表示编号检查通过，不代表语义已经核对。</p>
       <div class="dialog-actions"><button type="button" class="close-dialog primary">开始</button></div>
   </dialog>

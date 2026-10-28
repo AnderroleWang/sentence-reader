@@ -13,7 +13,7 @@ export class PdfDocumentPane {
   clear() {
     this.generation++; this.observer?.disconnect(); cancelAnimationFrame(this.scrollFrame);
     for (const record of this.records) record.renderer?.clear();
-    this.records = []; this.pdf = null; this.container.replaceChildren(); this.ids = [];
+    this.records = []; this.pdf = null; this.pendingPosition = null; this.container.replaceChildren(); this.ids = [];
   }
   invalidate() {
     for (const record of this.records) { record.renderer?.clear(); record.renderer = null; record.promise = null; record.stats = null; }
@@ -21,12 +21,15 @@ export class PdfDocumentPane {
     for (const record of this.records) { this.observer?.unobserve(record.slot); this.observer?.observe(record.slot); }
   }
   async render(pdf, number, units, zoom = 1, crops = null, groups = null) {
-    const width = Math.max(280, this.container.clientWidth - 16) * zoom;
+    // Use the viewport, not content/scroll width: an enlarged page must not
+    // become the base width for the next zoom or resize.
+    const width = Math.max(160, this.scroll.clientWidth - 16) * zoom;
     const pixelRatio = window.devicePixelRatio || 1;
     if (this.pdf !== pdf || this.width !== width || this.crops !== crops || this.pixelRatio !== pixelRatio) {
-      const old = this.capturePosition();
+      const old = this.pendingPosition || this.capturePosition();
       const samePdf = this.pdf === pdf;
       this.clear(); this.pdf = pdf; this.width = width; this.crops = crops; this.pixelRatio = pixelRatio;
+      this.pendingPosition = samePdf && old ? old : { page: number, fraction: 0 };
       const generation = this.generation;
       this.units = units; this.groups = groups;
       for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
@@ -47,7 +50,7 @@ export class PdfDocumentPane {
         }
       }, { root: this.scroll, rootMargin: '600px 0px' });
       for (const record of this.records) this.observer.observe(record.slot);
-      this.restorePosition(samePdf && old ? old : { page: number, fraction: 0 });
+      this.restorePosition(this.pendingPosition); this.pendingPosition = null;
     } else {
       this.units = units; this.groups = groups;
     }
@@ -56,15 +59,18 @@ export class PdfDocumentPane {
   }
   capturePosition() {
     if (!this.records.length) return null;
-    const top = this.scroll.getBoundingClientRect().top;
+    const root = this.scroll.getBoundingClientRect(), top = root.top;
     const record = this.records.find(r => r.slot.getBoundingClientRect().bottom > top) || this.records.at(-1);
     const rect = record.slot.getBoundingClientRect();
-    return { page: record.number, fraction: Math.max(0, (top - rect.top) / rect.height) };
+    return { page: record.number, fraction: Math.max(0, (top - rect.top) / rect.height),
+      horizontal: (root.left + this.scroll.clientLeft + this.scroll.clientWidth / 2 - rect.left) / rect.width };
   }
   restorePosition(position) {
     const record = this.records[position.page - 1]; if (!record) return;
     const rect = record.slot.getBoundingClientRect(), root = this.scroll.getBoundingClientRect();
-    this.scroll.scrollTo({ top: this.scroll.scrollTop + rect.top - root.top + position.fraction * rect.height, behavior: 'instant' });
+    const left = Number.isFinite(position.horizontal)
+      ? this.scroll.scrollLeft + rect.left - root.left - this.scroll.clientLeft + position.horizontal * rect.width - this.scroll.clientWidth / 2 : this.scroll.scrollLeft;
+    this.scroll.scrollTo({ top: this.scroll.scrollTop + rect.top - root.top + position.fraction * rect.height, left, behavior: 'instant' });
   }
   trackVisible() {
     if (!this.records.length || this.container.hidden) return;

@@ -7,6 +7,8 @@ import { ReadingTools } from './reading-tools.mjs';
 import { termsFor, alignmentIssues } from './reading-data.mjs';
 
 const $ = id => document.getElementById(id);
+const PDF_ZOOMS = [.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
+const pdfZoom = value => PDF_ZOOMS.reduce((nearest, scale) => Math.abs(scale - (Number(value) || 1)) < Math.abs(nearest - (Number(value) || 1)) ? scale : nearest, 1);
 const defaultSettings = { protocol: 'compatible', baseUrl: '', model: '', domain: '', batch: 8, theme: 'paper', fontSize: 19, focus: true };
 let settings = { ...defaultSettings };
 try { settings = { ...settings, ...JSON.parse(localStorage.getItem('sentence-reader-settings') || '{}') }; } catch {}
@@ -131,6 +133,9 @@ async function activateProject(value, alreadyLoadedPdf = null, alreadyLoadedTran
   if (pdf && pdf !== alreadyLoadedPdf) await pdf.destroy();
   if (translatedPdf && translatedPdf !== alreadyLoadedTranslation) await translatedPdf.destroy();
   project = validateProject(value); pdf = alreadyLoadedPdf;
+  // Old archives shared one zoom. Keep that appearance until either side changes.
+  project.pdfZoom = pdfZoom(project.pdfZoom);
+  project.targetPdfZoom = pdfZoom(project.targetPdfZoom ?? project.pdfZoom);
   translatedPdf = alreadyLoadedTranslation;
   if (project.pdfBlob && !pdf) {
     activity('正在打开原版 PDF…');
@@ -146,7 +151,7 @@ async function activateProject(value, alreadyLoadedPdf = null, alreadyLoadedTran
   project.activeIds = (project.activeIds || []).filter(id => validIds.has(id));
   if (!project.activeIds.length) project.activeIds = [project.units[0].source_id];
   readingTools.update(true);
-  renderSource(); renderTargets(); renderHeader(); renderLibrary();
+  renderSource(); renderTargets(false); renderHeader(); renderLibrary();
   await setView(project.view || 'text', false);
   selectIds(project.activeIds, 'restore', false);
   activity(project.externalLayout ? '已打开外部排版 PDF · 双向对应关系来自映射文件，请核对语义' : project.isDemo ? '预置交互示例 · 第 4 句演示一句英文对应两句中文' : '已打开 · 翻译前请先检查原文顺序与分句');
@@ -183,7 +188,7 @@ function renderSource() {
     paragraph.append(node, document.createTextNode(' ')); sourceNodes.set(unit.source_id, node);
   }
 }
-function renderTargets() {
+function renderTargets(renderLayout = true) {
   targetNodes = new Map(); $('target-text').replaceChildren();
   const checks = new Map(alignmentIssues(project).map(issue => [issue.ids[0], issue.reasons]));
   $('open-alignment').textContent = '对齐检查' + (checks.size ? ` · ${checks.size}` : '');
@@ -214,7 +219,7 @@ function renderTargets() {
     for (const id of group.source_ids) targetNodes.set(id, article);
   }
   updateSummary(); updateHighlights(); readingTools.update(true);
-  if (isLayout()) { translatedPane.invalidate(); renderTranslatedPdf(); }
+  if (renderLayout && isLayout()) { translatedPane.invalidate(); renderTranslatedPdf(); }
 }
 function updateSummary() {
   const translated = project.groups.filter(g => g.translation).reduce((n, g) => n + g.source_ids.length, 0);
@@ -311,16 +316,36 @@ function updatePageControls() {
   if (!pdf || !project) return;
   if (document.activeElement !== $('page-number')) $('page-number').value = project.page;
   $('page-number').max = pdf.numPages; $('page-total').textContent = '/ ' + pdf.numPages;
-  $('pdf-zoom').value = String(project.pdfZoom || 1);
+  updateZoomControls();
   $('previous-page').disabled = project.page <= 1; $('next-page').disabled = project.page >= pdf.numPages;
 }
-async function renderPdf() {
+function updateZoomControls() {
+  if (!project) return;
+  for (const [prefix, value] of [['pdf-zoom', project.pdfZoom], ['target-pdf-zoom', project.targetPdfZoom]]) {
+    const scale = pdfZoom(value);
+    $(prefix).value = String(scale);
+    $(prefix + '-out').disabled = scale === PDF_ZOOMS[0];
+    $(prefix + '-in').disabled = scale === PDF_ZOOMS.at(-1);
+    $(prefix + '-fit').disabled = scale === 1;
+  }
+}
+async function setPdfZoom(side, value) {
+  if (!pdf || project?.view !== 'pdf' || side === 'target' && !isLayout()) return;
+  selectionRequest++; pageRequest++;
+  project[side === 'target' ? 'targetPdfZoom' : 'pdfZoom'] = pdfZoom(value);
+  updateZoomControls();
+  if (side === 'target') await renderTranslatedPdf(); else await renderPdf(false);
+  saveSoon();
+}
+async function renderPdf(includeTarget = true) {
   if (!pdf || project.view !== 'pdf') return;
   const token = ++pdfRenderId, opening = !pdfPane.pdf;
   project.page = Math.max(1, Math.min(pdf.numPages, Number(project.page) || 1)); updatePageControls();
   const position = project.sourcePosition;
   try {
-    await Promise.all([pdfPane.render(pdf, project.page, project.units, Number(project.pdfZoom) || 1, project.sourceCrops), renderTranslatedPdf()]);
+    const jobs = [pdfPane.render(pdf, project.page, project.units, project.pdfZoom, project.sourceCrops)];
+    if (includeTarget) jobs.push(renderTranslatedPdf());
+    await Promise.all(jobs);
     if (token !== pdfRenderId) return;
     if (opening && position) pdfPane.restorePosition(position);
     pdfPane.highlight(project.activeIds);
@@ -335,8 +360,8 @@ function renderTranslatedPdf() {
       const pane = translatedPdf ? pairedPane : translatedPane, opening = !pane.pdf;
       if (translatedPdf) {
         project.targetPage = Math.max(1, Math.min(translatedPdf.numPages, Number(project.targetPage) || 1));
-        await pairedPane.render(translatedPdf, project.targetPage, project.units.map(u => ({ ...u, anchors: [], pdfBoxes: u.targetBoxes })), Number(project.pdfZoom) || 1, project.targetCrops);
-      } else await translatedPane.render(pdf, project.page, project.units, Number(project.pdfZoom) || 1, null, project.groups);
+        await pairedPane.render(translatedPdf, project.targetPage, project.units.map(u => ({ ...u, anchors: [], pdfBoxes: u.targetBoxes })), project.targetPdfZoom, project.targetCrops);
+      } else await translatedPane.render(pdf, project.page, project.units, project.targetPdfZoom, null, project.groups);
       if (token !== targetRenderId) return;
       if (opening && position) pane.restorePosition(position);
       pane.highlight(project.activeIds);
@@ -371,6 +396,8 @@ function updateTargetView() {
   const layout = isLayout();
   $('target-text').hidden = layout; $('translated-pdf-container').hidden = !layout; $('layout-note').hidden = !layout;
   $('source-layout-note').hidden = !layout;
+  $('target-pdf-navigation').hidden = !layout;
+  updateZoomControls();
   $('target-text').classList.toggle('flow-reading', project.targetView === 'reader');
   for (const [id, on] of [['target-view-text', !layout && project.targetView !== 'reader'], ['target-view-reader', !layout && project.targetView === 'reader'], ['target-view-layout', layout]]) { $(id).classList.toggle('selected', on); $(id).setAttribute('aria-pressed', String(on)); }
   if (!layout) { targetRenderId++; translatedPane.clear(); pairedPane.clear(); }
@@ -601,10 +628,18 @@ $('layout-read').onclick = () => expandLayout();
 $('previous-page').onclick = () => jumpPage(project.page - 1).catch(showError);
 $('next-page').onclick = () => jumpPage(project.page + 1).catch(showError);
 $('page-number').onchange = () => jumpPage($('page-number').value).catch(showError);
-$('pdf-zoom').onchange = () => { project.pdfZoom = Number($('pdf-zoom').value); renderPdf(); saveSoon(); };
+for (const [side, prefix] of [['source', 'pdf-zoom'], ['target', 'target-pdf-zoom']]) {
+  for (const scale of PDF_ZOOMS) $(prefix).add(new Option(scale === 1 ? '适宽' : Math.round(scale * 100) + '%', String(scale)));
+  $(prefix).onchange = () => setPdfZoom(side, $(prefix).value).catch(showError);
+  for (const [suffix, step] of [['-out', -1], ['-in', 1]]) $(prefix + suffix).onclick = () => {
+    const index = PDF_ZOOMS.indexOf(pdfZoom($(prefix).value));
+    setPdfZoom(side, PDF_ZOOMS[Math.max(0, Math.min(PDF_ZOOMS.length - 1, index + step))]).catch(showError);
+  };
+  $(prefix + '-fit').onclick = () => setPdfZoom(side, 1).catch(showError);
+}
 $('previous-sentence').onclick = () => { document.getSelection()?.removeAllRanges(); const first = project.units.findIndex(u => u.source_id === project.activeIds[0]); if (first > 0) selectIds([project.units[first - 1].source_id], 'nav'); };
 $('next-sentence').onclick = () => { document.getSelection()?.removeAllRanges(); const last = project.units.findIndex(u => u.source_id === project.activeIds.at(-1)); if (last < project.units.length - 1) selectIds([project.units[last + 1].source_id], 'nav'); };
-$('previous-sentence').title = '上一句 · ↑ / ← / K'; $('next-sentence').title = '下一句 · ↓ / → / J'; $('font-minus').title = '减小字号'; $('font-plus').title = '增大字号';
+$('previous-sentence').title = '上一句 · ↑ / ← / K'; $('next-sentence').title = '下一句 · ↓ / → / J'; $('font-minus').title = '减小正文字号；PDF 请使用各侧缩放'; $('font-plus').title = '增大正文字号；PDF 请使用各侧缩放';
 document.addEventListener('keydown', event => {
   if (!project || readingBlocked() || event.isComposing || event.ctrlKey || event.metaKey || event.shiftKey || document.querySelector('dialog[open]')) return;
   if (event.target.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"])')) return;

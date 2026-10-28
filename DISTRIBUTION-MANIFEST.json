@@ -1,6 +1,6 @@
 {
   "app": "sentence-reader",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "package": "source",
   "privacy": "Application, documentation and self-authored demo only; no user browser data or API settings.",
   "files": [
@@ -16,8 +16,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 5623,
-      "sha256": "3fbd869f568d5c382186ee3f4430fd735fd6adc101700808bcfd6d1fc030e7d3"
+      "bytes": 6214,
+      "sha256": "28a4740b9605f561ca0cf6833d07d53585c0437e83f5919cf09eb96dfebaa344"
     },
     {
       "path": "CONTRIBUTING.md",
@@ -31,8 +31,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 15535,
-      "sha256": "c6da8a311183714f86bbc7efb6d670ba45fd38d244add6a5c46247007f20da32"
+      "bytes": 16327,
+      "sha256": "251c53d9a78b8c04beefc49a07c87ba0bfef4ef47de8dc5baa786932582d5dbd"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -51,8 +51,8 @@
     },
     {
       "path": "app.mjs",
-      "bytes": 51741,
-      "sha256": "94520e1de135fb187dd2022f94f13ca021c625b1b5d263c20d63ff2a3ae1ca94"
+      "bytes": 53717,
+      "sha256": "251b4bb10ce6afc464bece71098df467de10ee4873eba0f59e601c3f8137d267"
     },
     {
       "path": "docs/PRIVACY.md",
@@ -61,8 +61,8 @@
     },
     {
       "path": "docs/USER_GUIDE.md",
-      "bytes": 24766,
-      "sha256": "3babf9892dd61ff757cbbf6a6df418866bdf5cd49d149d8efb465f1d233c6be8"
+      "bytes": 25704,
+      "sha256": "c5c1fab2d5afc5fb1a11db5b347f2d25691ac94b1c430550a31e4a516e659346"
     },
     {
       "path": "examples/layout-demo.句读.json",
@@ -86,8 +86,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 15192,
-      "sha256": "504b3d2296c26e8ba267eb5e8eaada16100686a957ea5bfdb18eb9bac7d2ab07"
+      "bytes": 16013,
+      "sha256": "dcaabdc47157f274cf54f6930a7755d6c0cdd6821d8b6050971035d197edbacc"
     },
     {
       "path": "paired-import.mjs",
@@ -96,8 +96,8 @@
     },
     {
       "path": "pdf-document.mjs",
-      "bytes": 9543,
-      "sha256": "bebf7f3e93e6d9a2b9fd87dcbc6627a044f9fc6ee1ebee3245eea4d52351c8d8"
+      "bytes": 10163,
+      "sha256": "228975501a3d2eddd623ec7e63cc201001090ea473c5e841728a9ae209688a81"
     },
     {
       "path": "pdf-reader.mjs",
@@ -137,7 +137,7 @@
     {
       "path": "server.py",
       "bytes": 25311,
-      "sha256": "295f752973e3c45dd2247d4a1920c30e174ddc8f230f3565d517960826a7287d"
+      "sha256": "0c7c71e20adfe636f99e7a3b6f2c9f81fea567c417c61d1b5e0d0ad1977e75d2"
     },
     {
       "path": "start.cmd",
@@ -151,8 +151,8 @@
     },
     {
       "path": "styles.css",
-      "bytes": 21977,
-      "sha256": "e582af7db696d415d016729f8de2455ee2c21ce023225de84c07ffbfd0ee2b20"
+      "bytes": 22478,
+      "sha256": "0f3cb36c9b41356818a8dada0fff08472e3d3ac00c66bf3b73c8d712a6a98f16"
     },
     {
       "path": "tests/columns.browser.mjs",
@@ -183,6 +183,11 @@
       "path": "tests/test_server.py",
       "bytes": 19223,
       "sha256": "853f85372da3fcd0015892043ca1388873c653b732a685e71f1967cae5fb8290"
+    },
+    {
+      "path": "tests/zoom.browser.mjs",
+      "bytes": 10534,
+      "sha256": "4ff098e4f879b7ef38b6557bd243c0e5d9a9e9dd597a5b44b123f3fe28743566"
     },
     {
       "path": "translated-pdf.mjs",
@@ -291,8 +296,8 @@
     },
     {
       "path": "开始使用.md",
-      "bytes": 2797,
-      "sha256": "f8c032ddd487b9893ab7f00b8e27b418caac3427394a465028fa9ed6a05e89aa"
+      "bytes": 3018,
+      "sha256": "b3c54a601b8cc91d491d59d1ccee0ef6afcc7c17195ff734d9c30ed80e436959"
     }
   ]
 }
